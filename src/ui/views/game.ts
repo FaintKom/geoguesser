@@ -16,6 +16,7 @@ export function renderGame(): HTMLElement {
   let totalRounds = engine.settings.totalRounds;
   let hasGuessed = false;
   const guessedPlayers = new Set<string>();
+  const readyPlayers = new Set<string>();
 
   div.innerHTML = `
     <div class="game__viewer" id="mapillary-container"></div>
@@ -53,7 +54,11 @@ export function renderGame(): HTMLElement {
     if (currentRound > 0) {
       const roundInfo = document.getElementById('round-info');
       if (roundInfo) roundInfo.textContent = `РАУНД ${currentRound}/${totalRounds}`;
-      if (engine.currentImageId) viewer.showImage(engine.currentImageId);
+      if (engine.currentImageId) {
+        viewer.showImage(engine.currentImageId);
+        // Mark ready after a short delay (iframe needs time to start loading)
+        setTimeout(() => engine.markReady(), 2000);
+      }
     }
 
     // Toggle map fullscreen (works on both mobile and desktop)
@@ -109,10 +114,11 @@ export function renderGame(): HTMLElement {
         totalRounds = event.totalRounds;
         hasGuessed = false;
         guessedPlayers.clear();
+        readyPlayers.clear();
         guessMap.reset();
 
         const roundInfo = document.getElementById('round-info');
-        if (roundInfo) roundInfo.textContent = `РАУНД ${currentRound}/${totalRounds}`;
+        if (roundInfo) roundInfo.textContent = `ЗАГРУЗКА...`;
 
         const btn = document.getElementById('btn-confirm') as HTMLButtonElement;
         if (btn) {
@@ -122,8 +128,21 @@ export function renderGame(): HTMLElement {
 
         viewer.showImage(event.imageId);
         updatePlayersStatus();
+
+        // Mark ready after iframe loads
+        setTimeout(() => engine.markReady(), 2000);
         break;
       }
+      case 'all_ready': {
+        const roundInfo = document.getElementById('round-info');
+        if (roundInfo) roundInfo.textContent = `РАУНД ${currentRound}/${totalRounds}`;
+        break;
+      }
+      case 'player_ready':
+        readyPlayers.add(event.playerId);
+        updatePlayersStatus();
+        break;
+
       case 'timer_update':
         updateTimer(timerEl, event.remaining);
         break;
@@ -151,13 +170,24 @@ export function renderGame(): HTMLElement {
     engine.players.forEach((p, i) => {
       const dot = document.createElement('div');
       dot.className = 'game__player-status';
-      dot.title = p.name;
-      dot.style.borderColor = PLAYER_COLORS[i % PLAYER_COLORS.length];
+      const color = PLAYER_COLORS[i % PLAYER_COLORS.length];
+      dot.style.borderColor = color;
 
       if (guessedPlayers.has(p.id)) {
+        // Guessed — solid color
         dot.classList.add('game__player-status--guessed');
-        dot.style.background = PLAYER_COLORS[i % PLAYER_COLORS.length];
-        dot.style.borderColor = PLAYER_COLORS[i % PLAYER_COLORS.length];
+        dot.style.background = color;
+        dot.style.borderColor = color;
+        dot.title = `${p.name} — угадал`;
+      } else if (readyPlayers.has(p.id)) {
+        // Ready — half filled
+        dot.classList.add('game__player-status--ready');
+        dot.style.borderColor = color;
+        dot.title = `${p.name} — готов`;
+      } else {
+        // Loading
+        dot.classList.add('game__player-status--loading');
+        dot.title = `${p.name} — загрузка...`;
       }
 
       container.appendChild(dot);

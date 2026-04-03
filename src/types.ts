@@ -39,12 +39,15 @@ export type HostMessage =
   | { type: 'TIMER_SYNC'; remaining: number }
   | { type: 'ROUND_END'; round: number; correctLat: number; correctLng: number; guesses: Guess[] }
   | { type: 'GAME_END'; leaderboard: LeaderboardEntry[] }
-  | { type: 'PLAYER_GUESSED'; playerId: string };
+  | { type: 'PLAYER_GUESSED'; playerId: string }
+  | { type: 'PLAYER_READY'; playerId: string }
+  | { type: 'ALL_READY' };
 
 // Peers -> Host messages
 export type PeerMessage =
   | { type: 'JOIN'; name: string }
-  | { type: 'GUESS'; lat: number; lng: number };
+  | { type: 'GUESS'; lat: number; lng: number }
+  | { type: 'READY' };
 
 export interface LeaderboardEntry {
   playerId: string;

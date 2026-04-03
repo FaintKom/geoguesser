@@ -447,6 +447,19 @@ body {
   transition: all 0.3s;
 }
 
+.game__player-status--loading {
+  animation: blink 1s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+.game__player-status--ready {
+  background: radial-gradient(circle at center, currentColor 40%, transparent 41%);
+}
+
 .game__player-status--guessed {
   background: var(--neon-green);
   border-color: var(--neon-green);

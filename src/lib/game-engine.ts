@@ -15,6 +15,8 @@ export type UIEvent =
   | { type: 'round_start'; round: number; totalRounds: number; imageId: string }
   | { type: 'timer_update'; remaining: number }
   | { type: 'player_guessed'; playerId: string }
+  | { type: 'player_ready'; playerId: string }
+  | { type: 'all_ready' }
   | { type: 'round_end'; round: number; correctLat: number; correctLng: number; guesses: Guess[] }
   | { type: 'game_end'; leaderboard: LeaderboardEntry[] }
   | { type: 'error'; message: string }
@@ -38,8 +40,10 @@ export class GameEngine {
   currentImageId = '';
   private locations: Location[] = [];
   private roundGuesses: RoundScore = {};
+  private readyPlayers = new Set<string>();
   private timerInterval: ReturnType<typeof setInterval> | null = null;
   private timeRemaining = 0;
+  private timerStarted = false;
   private totalScores: Record<string, number> = {};
 
   private stateChangeHandlers: StateChangeHandler[] = [];
@@ -139,11 +143,17 @@ export class GameEngine {
         this.registerGuess(connId, msg.lat, msg.lng);
         break;
       }
+      case 'READY': {
+        if (this.state !== 'playing') return;
+        this.registerReady(connId);
+        break;
+      }
     }
   }
 
   private handlePlayerLeave(connId: string) {
     this.players = this.players.filter(p => p.id !== connId);
+    this.readyPlayers.delete(connId);
     this.emit({ type: 'players_updated', players: this.players });
     this.hostPeer?.broadcast({ type: 'LOBBY_UPDATE', players: this.players });
 
@@ -178,6 +188,15 @@ export class GameEngine {
 
       case 'PLAYER_GUESSED':
         this.emit({ type: 'player_guessed', playerId: msg.playerId });
+        break;
+
+      case 'PLAYER_READY':
+        this.readyPlayers.add(msg.playerId);
+        this.emit({ type: 'player_ready', playerId: msg.playerId });
+        break;
+
+      case 'ALL_READY':
+        this.emit({ type: 'all_ready' });
         break;
 
       case 'ROUND_END':
@@ -222,6 +241,8 @@ export class GameEngine {
     const location = this.locations[this.currentRound - 1];
     this.currentImageId = location.imageId;
     this.roundGuesses = {};
+    this.readyPlayers.clear();
+    this.timerStarted = false;
     this.timeRemaining = this.settings.timePerRound;
 
     const msg: HostMessage = {
@@ -242,7 +263,7 @@ export class GameEngine {
       imageId: location.imageId,
     });
 
-    this.startTimer();
+    // Timer starts only when all players are ready (markReady called)
   }
 
   private startTimer() {
@@ -264,6 +285,33 @@ export class GameEngine {
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
       this.timerInterval = null;
+    }
+  }
+
+  // === BOTH: Mark self as ready (loaded) ===
+  markReady() {
+    if (this.isHost) {
+      this.registerReady(this.hostPlayerId);
+    } else {
+      this.clientPeer?.send({ type: 'READY' });
+    }
+  }
+
+  // === HOST: Register player ready ===
+  private registerReady(playerId: string) {
+    if (this.readyPlayers.has(playerId)) return;
+    this.readyPlayers.add(playerId);
+    console.log('[GeoGuesser] Player ready:', playerId, `(${this.readyPlayers.size}/${this.players.length})`);
+
+    this.hostPeer?.broadcast({ type: 'PLAYER_READY', playerId });
+    this.emit({ type: 'player_ready', playerId });
+
+    // Check if all ready
+    if (this.readyPlayers.size >= this.players.length && !this.timerStarted) {
+      this.timerStarted = true;
+      this.hostPeer?.broadcast({ type: 'ALL_READY' });
+      this.emit({ type: 'all_ready' });
+      this.startTimer();
     }
   }
 
