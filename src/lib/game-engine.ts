@@ -293,7 +293,7 @@ export class GameEngine {
   }
 
   private checkAllGuessed() {
-    const activePlayers = this.players.filter(p => !p.isHost ? this.hostPeer!.connections.has(p.id) : true);
+    const activePlayers = this.players;
     const allGuessed = activePlayers.every(p => this.roundGuesses[p.id] != null);
 
     if (allGuessed) {

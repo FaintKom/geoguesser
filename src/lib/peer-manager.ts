@@ -1,9 +1,13 @@
-import Peer, { DataConnection } from 'peerjs';
+import { db } from './firebase-config';
+import {
+  ref, set, push, onValue, onChildAdded, onChildRemoved,
+  remove, update, off, get,
+} from 'firebase/database';
 import type { HostMessage, PeerMessage } from '../types';
 
-type MessageHandler = (msg: PeerMessage, connId: string) => void;
+type MessageHandler = (msg: PeerMessage, playerId: string) => void;
 type HostMessageHandler = (msg: HostMessage) => void;
-type ConnectionHandler = (connId: string) => void;
+type ConnectionHandler = (playerId: string) => void;
 
 function generateRoomCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -14,120 +18,106 @@ function generateRoomCode(): string {
   return code;
 }
 
-const PEER_PREFIX = 'geoguesser-';
-
-// ICE servers config with TURN relay for NAT traversal
-const ICE_SERVERS: RTCIceServer[] = [
-  { urls: 'stun:stun.l.google.com:19302' },
-  { urls: 'stun:stun1.l.google.com:19302' },
-  {
-    urls: 'turn:openrelay.metered.ca:80',
-    username: 'openrelayproject',
-    credential: 'openrelayproject',
-  },
-  {
-    urls: 'turn:openrelay.metered.ca:443',
-    username: 'openrelayproject',
-    credential: 'openrelayproject',
-  },
-  {
-    urls: 'turn:openrelay.metered.ca:443?transport=tcp',
-    username: 'openrelayproject',
-    credential: 'openrelayproject',
-  },
-];
-
-const PEER_CONFIG = {
-  config: {
-    iceServers: ICE_SERVERS,
-  },
-};
+function generatePlayerId(): string {
+  return Math.random().toString(36).substring(2, 10);
+}
 
 export class HostPeerManager {
-  peer: Peer | null = null;
-  connections: Map<string, DataConnection> = new Map();
   roomCode = '';
+  playerId = '';
   private onMessageHandler: MessageHandler | null = null;
   private onPlayerJoinHandler: ConnectionHandler | null = null;
   private onPlayerLeaveHandler: ConnectionHandler | null = null;
+  private cleanupFns: (() => void)[] = [];
+
+  get peer() { return { id: this.playerId }; }
+  get connections(): Map<string, boolean> {
+    return this._playerIds;
+  }
+  private _playerIds = new Map<string, boolean>();
 
   async createRoom(): Promise<string> {
-    // Retry up to 3 times with fresh room codes
+    this.playerId = generatePlayerId();
+
+    // Try up to 3 times
     for (let attempt = 0; attempt < 3; attempt++) {
-      try {
-        return await this.tryCreateRoom();
-      } catch {
-        this.peer?.destroy();
-        this.peer = null;
-      }
-    }
-    throw new Error('Failed to create room after 3 attempts');
-  }
-
-  private tryCreateRoom(): Promise<string> {
-    return new Promise((resolve, reject) => {
       this.roomCode = generateRoomCode();
-      const peerId = PEER_PREFIX + this.roomCode;
-      let settled = false;
+      const roomRef = ref(db, `rooms/${this.roomCode}`);
 
-      this.peer = new Peer(peerId, PEER_CONFIG);
+      // Check if room exists
+      const snapshot = await get(roomRef);
+      if (snapshot.exists()) continue;
 
-      const timeout = setTimeout(() => {
-        if (!settled) {
-          settled = true;
-          reject(new Error('Connection timeout'));
-        }
-      }, 15000);
+      // roomRef used below
 
-      this.peer.on('open', () => {
-        if (settled) return;
-        settled = true;
-        clearTimeout(timeout);
-
-        this.peer!.on('connection', (conn) => {
-          conn.on('open', () => {
-            this.connections.set(conn.peer, conn);
-            this.onPlayerJoinHandler?.(conn.peer);
-          });
-
-          conn.on('data', (data) => {
-            this.onMessageHandler?.(data as PeerMessage, conn.peer);
-          });
-
-          conn.on('close', () => {
-            this.connections.delete(conn.peer);
-            this.onPlayerLeaveHandler?.(conn.peer);
-          });
-
-          conn.on('error', () => {
-            this.connections.delete(conn.peer);
-            this.onPlayerLeaveHandler?.(conn.peer);
-          });
-        });
-
-        resolve(this.roomCode);
+      // Create room
+      await set(roomRef, {
+        hostId: this.playerId,
+        createdAt: Date.now(),
+        state: 'lobby',
       });
 
-      this.peer.on('error', (err) => {
-        if (!settled) {
-          settled = true;
-          clearTimeout(timeout);
-          reject(err);
+      console.log('[GeoGuesser] Room created:', this.roomCode);
+
+      // Listen for peer messages
+      const messagesRef = ref(db, `rooms/${this.roomCode}/messages`);
+      onChildAdded(messagesRef, (snap) => {
+        const data = snap.val();
+        if (data && data.from !== this.playerId) {
+          console.log('[GeoGuesser] Host got message:', data.type, 'from:', data.from);
+          this.onMessageHandler?.(data as PeerMessage, data.from);
+          // Remove processed message
+          remove(snap.ref);
         }
       });
-    });
+      this.cleanupFns.push(() => off(messagesRef));
+
+      // Listen for players joining/leaving
+      const playersRef = ref(db, `rooms/${this.roomCode}/players`);
+      onChildAdded(playersRef, (snap) => {
+        const pid = snap.key!;
+        if (pid !== this.playerId) {
+          console.log('[GeoGuesser] Player joined:', pid);
+          this._playerIds.set(pid, true);
+          this.onPlayerJoinHandler?.(pid);
+        }
+      });
+
+      onChildRemoved(playersRef, (snap) => {
+        const pid = snap.key!;
+        console.log('[GeoGuesser] Player left:', pid);
+        this._playerIds.delete(pid);
+        this.onPlayerLeaveHandler?.(pid);
+      });
+
+      this.cleanupFns.push(() => off(playersRef));
+
+      // Add host as player
+      await set(ref(db, `rooms/${this.roomCode}/players/${this.playerId}`), {
+        joinedAt: Date.now(),
+      });
+
+      // Heartbeat to keep room alive
+      const heartbeat = setInterval(() => {
+        update(ref(db, `rooms/${this.roomCode}`), { lastActive: Date.now() });
+      }, 10000);
+      this.cleanupFns.push(() => clearInterval(heartbeat));
+
+      return this.roomCode;
+    }
+
+    throw new Error('Failed to create room');
   }
 
   broadcast(message: HostMessage) {
-    const data = JSON.parse(JSON.stringify(message));
-    for (const conn of this.connections.values()) {
-      conn.send(data);
-    }
+    if (!this.roomCode) return;
+    const broadcastRef = ref(db, `rooms/${this.roomCode}/broadcast`);
+    push(broadcastRef, { ...message, ts: Date.now() });
   }
 
-  sendTo(connId: string, message: HostMessage) {
-    const conn = this.connections.get(connId);
-    conn?.send(JSON.parse(JSON.stringify(message)));
+  sendTo(_connId: string, message: HostMessage) {
+    // For simplicity, broadcast to all (peers filter by relevance)
+    this.broadcast(message);
   }
 
   onMessage(handler: MessageHandler) {
@@ -143,87 +133,78 @@ export class HostPeerManager {
   }
 
   destroy() {
-    for (const conn of this.connections.values()) {
-      conn.close();
+    for (const fn of this.cleanupFns) fn();
+    this.cleanupFns = [];
+    if (this.roomCode) {
+      remove(ref(db, `rooms/${this.roomCode}`));
     }
-    this.connections.clear();
-    this.peer?.destroy();
-    this.peer = null;
+    // cleaned up
+    this._playerIds.clear();
   }
 }
 
 export class ClientPeerManager {
-  peer: Peer | null = null;
-  connection: DataConnection | null = null;
+  connId = '';
+  private roomCode = '';
   private onMessageHandler: HostMessageHandler | null = null;
   private onDisconnectHandler: (() => void) | null = null;
-  connId = '';
+  private cleanupFns: (() => void)[] = [];
+  connection: boolean = false;
 
   async joinRoom(roomCode: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      let settled = false;
+    this.roomCode = roomCode.toUpperCase();
+    this.connId = generatePlayerId();
 
-      this.peer = new Peer(PEER_CONFIG);
+    console.log('[GeoGuesser] Joining room:', this.roomCode);
 
-      const timeout = setTimeout(() => {
-        if (!settled) {
-          settled = true;
-          console.error('[GeoGuesser] Join timeout after 20s');
-          reject(new Error('Connection timeout'));
-        }
-      }, 20000);
+    // Check room exists
+    const roomRef = ref(db, `rooms/${this.roomCode}`);
+    const snapshot = await get(roomRef);
+    if (!snapshot.exists()) {
+      throw new Error('Комната не найдена');
+    }
 
-      this.peer.on('open', (id) => {
-        this.connId = id;
-        console.log('[GeoGuesser] Peer open, connecting to host:', PEER_PREFIX + roomCode.toUpperCase());
-        const hostId = PEER_PREFIX + roomCode.toUpperCase();
-        const conn = this.peer!.connect(hostId, { reliable: true });
-
-        conn.on('open', () => {
-          if (settled) return;
-          settled = true;
-          clearTimeout(timeout);
-          this.connection = conn;
-          console.log('[GeoGuesser] Connected to host!');
-
-          conn.on('data', (data) => {
-            this.onMessageHandler?.(data as HostMessage);
-          });
-
-          conn.on('close', () => {
-            this.onDisconnectHandler?.();
-          });
-
-          conn.on('error', () => {
-            this.onDisconnectHandler?.();
-          });
-
-          resolve();
-        });
-
-        conn.on('error', (err) => {
-          if (!settled) {
-            settled = true;
-            clearTimeout(timeout);
-            console.error('[GeoGuesser] Connection error:', err);
-            reject(err);
-          }
-        });
-      });
-
-      this.peer.on('error', (err) => {
-        if (!settled) {
-          settled = true;
-          clearTimeout(timeout);
-          console.error('[GeoGuesser] Peer error:', err.type, err.message);
-          reject(err);
-        }
-      });
+    // Add self as player
+    await set(ref(db, `rooms/${this.roomCode}/players/${this.connId}`), {
+      joinedAt: Date.now(),
     });
+
+    this.connection = true;
+    console.log('[GeoGuesser] Joined room:', this.roomCode);
+
+    // Listen for broadcast messages from host
+    const broadcastRef = ref(db, `rooms/${this.roomCode}/broadcast`);
+    onChildAdded(broadcastRef, (snap) => {
+      const data = snap.val();
+      if (data) {
+        console.log('[GeoGuesser] Client got broadcast:', data.type);
+        this.onMessageHandler?.(data as HostMessage);
+      }
+    });
+    this.cleanupFns.push(() => off(broadcastRef));
+
+    // Watch for room deletion (host left)
+    onValue(roomRef, (snap) => {
+      if (!snap.exists()) {
+        console.log('[GeoGuesser] Room was deleted (host left)');
+        this.onDisconnectHandler?.();
+      }
+    });
+    this.cleanupFns.push(() => off(roomRef));
+
+    // Heartbeat
+    const heartbeat = setInterval(() => {
+      update(ref(db, `rooms/${this.roomCode}/players/${this.connId}`), {
+        lastActive: Date.now(),
+      });
+    }, 10000);
+    this.cleanupFns.push(() => clearInterval(heartbeat));
   }
 
   send(message: PeerMessage) {
-    this.connection?.send(JSON.parse(JSON.stringify(message)));
+    if (!this.roomCode) return;
+    const messagesRef = ref(db, `rooms/${this.roomCode}/messages`);
+    push(messagesRef, { ...message, from: this.connId, ts: Date.now() });
   }
 
   onMessage(handler: HostMessageHandler) {
@@ -235,9 +216,11 @@ export class ClientPeerManager {
   }
 
   destroy() {
-    this.connection?.close();
-    this.peer?.destroy();
-    this.peer = null;
-    this.connection = null;
+    for (const fn of this.cleanupFns) fn();
+    this.cleanupFns = [];
+    if (this.roomCode && this.connId) {
+      remove(ref(db, `rooms/${this.roomCode}/players/${this.connId}`));
+    }
+    this.connection = false;
   }
 }

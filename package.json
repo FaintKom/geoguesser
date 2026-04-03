@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "firebase": "^12.11.0",
     "leaflet": "^1.9.4",
     "mapillary-js": "^4.1.2",
     "peerjs": "^1.5.5",
