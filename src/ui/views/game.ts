@@ -53,8 +53,23 @@ export function renderGame(): HTMLElement {
       if (engine.currentImageId) viewer.showImage(engine.currentImageId);
     }
 
-    // Enable confirm button when map is clicked
+    // Mobile: tap minimap to expand/collapse
     const mapContainer = document.getElementById('guess-map-container')!;
+    const isTouchDevice = 'ontouchstart' in window;
+    if (isTouchDevice) {
+      const expandBtn = document.createElement('div');
+      expandBtn.className = 'game__map-expand';
+      expandBtn.textContent = 'КАРТА';
+      expandBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        mapContainer.classList.toggle('expanded');
+        guessMap.resize();
+        expandBtn.textContent = mapContainer.classList.contains('expanded') ? 'СВЕРНУТЬ' : 'КАРТА';
+      });
+      mapContainer.parentElement?.appendChild(expandBtn);
+    }
+
+    // Enable confirm button when map is clicked
     mapContainer.addEventListener('click', () => {
       if (!hasGuessed && guessMap.getGuess()) {
         const btn = document.getElementById('btn-confirm') as HTMLButtonElement;

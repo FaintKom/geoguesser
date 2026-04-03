@@ -551,23 +551,294 @@ body {
   max-width: 500px;
 }
 
-/* Responsive */
+/* ============ MOBILE ============ */
 @media (max-width: 768px) {
-  .landing__actions {
-    flex-direction: column;
-    align-items: center;
+  /* Landing */
+  .landing {
+    padding: 16px;
+    justify-content: flex-start;
+    padding-top: 10vh;
   }
 
+  .landing__logo {
+    font-size: clamp(1.6rem, 8vw, 2.5rem);
+    letter-spacing: 2px;
+  }
+
+  .landing__subtitle {
+    font-size: 0.9rem;
+    margin-bottom: 24px;
+  }
+
+  .landing__actions {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    max-width: 400px;
+    gap: 16px;
+  }
+
+  .landing__card {
+    width: 100%;
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .landing__card h2 {
+    font-size: 0.9rem;
+  }
+
+  .btn {
+    font-size: 0.8rem;
+    padding: 14px 24px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .input {
+    font-size: 16px; /* prevents iOS zoom on focus */
+    padding: 14px 12px;
+  }
+
+  /* Lobby */
+  .lobby {
+    padding: 16px;
+    padding-top: 8vh;
+    gap: 16px;
+  }
+
+  .lobby__title {
+    font-size: 1.2rem;
+  }
+
+  .room-code {
+    font-size: 1.8rem;
+    letter-spacing: 6px;
+    padding: 12px;
+  }
+
+  .lobby__settings {
+    gap: 12px;
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .lobby__setting {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .lobby__setting select {
+    width: 100%;
+    font-size: 14px;
+    padding: 10px 8px;
+  }
+
+  .lobby__setting label {
+    font-size: 0.7rem;
+  }
+
+  /* Game View */
   .game__minimap {
-    width: 200px;
-    height: 150px;
-    bottom: 70px;
+    width: 140px;
+    height: 100px;
+    bottom: 60px;
+    right: 8px;
+    border-width: 1px;
+  }
+
+  .game__minimap:hover,
+  .game__minimap:active,
+  .game__minimap.expanded {
+    width: 85vw;
+    height: 45vh;
+    bottom: 60px;
+    right: 50%;
+    transform: translateX(50%);
+  }
+
+  .game__hud {
+    top: 8px;
+    left: 8px;
     right: 8px;
   }
 
+  .game__round-info {
+    font-size: 0.7rem;
+    padding: 6px 10px;
+  }
+
+  .game__timer {
+    font-size: 1.3rem;
+    padding: 6px 12px;
+  }
+
+  .game__bottom-bar {
+    bottom: 8px;
+    left: 8px;
+    right: 8px;
+    justify-content: space-between;
+  }
+
+  .game__bottom-bar .btn {
+    width: auto;
+    flex: 1;
+    padding: 12px 16px;
+    font-size: 0.75rem;
+  }
+
+  .game__players-status {
+    padding: 6px 8px;
+    gap: 6px;
+  }
+
+  .game__player-status {
+    width: 10px;
+    height: 10px;
+  }
+
+  /* Results */
+  .results__panel {
+    padding: 12px 16px;
+    max-height: 50vh;
+  }
+
+  .results__title {
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+  }
+
+  .results__table th {
+    font-size: 0.6rem;
+    padding: 4px 6px;
+  }
+
+  .results__table td {
+    padding: 6px;
+    font-size: 0.85rem;
+  }
+
+  .results__next-btn {
+    width: 100%;
+  }
+
+  /* Leaderboard */
+  .leaderboard {
+    padding: 16px;
+    gap: 20px;
+  }
+
+  .leaderboard__title {
+    font-size: 1.4rem;
+  }
+
+  .leaderboard__podium {
+    gap: 8px;
+    flex-wrap: nowrap;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .leaderboard__podium-item {
+    min-width: 0;
+    flex: 1;
+    max-width: 120px;
+    padding: 12px 8px;
+  }
+
+  .leaderboard__podium-item--first {
+    min-height: 140px;
+  }
+
+  .leaderboard__podium-item--second {
+    min-height: 110px;
+  }
+
+  .leaderboard__podium-item--third {
+    min-height: 90px;
+  }
+
+  .leaderboard__rank {
+    font-size: 1.4rem;
+  }
+
+  .leaderboard__name {
+    font-size: 0.85rem;
+  }
+
+  .leaderboard__score {
+    font-size: 0.75rem;
+  }
+
+  .leaderboard__full-list {
+    width: 100%;
+  }
+}
+
+/* Small phones */
+@media (max-width: 380px) {
+  .landing__logo {
+    font-size: 1.4rem;
+  }
+
+  .room-code {
+    font-size: 1.4rem;
+    letter-spacing: 4px;
+  }
+
+  .game__minimap {
+    width: 120px;
+    height: 85px;
+  }
+
+  .game__timer {
+    font-size: 1.1rem;
+  }
+}
+
+/* Touch device: tap minimap to expand/collapse */
+@media (hover: none) {
   .game__minimap:hover {
-    width: 280px;
-    height: 200px;
+    width: 140px;
+    height: 100px;
+    transform: none;
+    right: 8px;
+  }
+}
+
+/* Mobile map expand button */
+.game__map-expand {
+  position: absolute;
+  bottom: 60px;
+  right: 8px;
+  z-index: 1001;
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  color: var(--neon-cyan);
+  background: rgba(10, 10, 26, 0.9);
+  border: 1px solid var(--neon-cyan);
+  padding: 6px 12px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+@media (min-width: 769px) {
+  .game__map-expand {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .game__minimap.expanded + .game__map-expand,
+  .game__map-expand {
+    bottom: auto;
+    right: 8px;
+  }
+
+  .game__minimap.expanded ~ .game__map-expand {
+    top: 50px;
+    bottom: auto;
   }
 }
 
