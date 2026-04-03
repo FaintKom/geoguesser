@@ -28,5 +28,20 @@
   {"imageId": "1105108636681106", "lat": 47.372, "lng": 8.541, "country": "Switzerland", "category": ["europe"]},
   {"imageId": "1086236249594933", "lat": 52.247, "lng": 21.016, "country": "Poland", "category": ["capitals", "europe"]},
   {"imageId": "1001079904149464", "lat": 34.965, "lng": 135.770, "country": "Japan", "category": ["asia"]},
-  {"imageId": "137950648358325", "lat": -33.940, "lng": 18.402, "country": "South Africa", "category": ["capitals"]}
+  {"imageId": "137950648358325", "lat": -33.940, "lng": 18.402, "country": "South Africa", "category": ["capitals"]},
+  {"imageId": "1942686162569101", "lat": 59.933, "lng": 30.331, "country": "Russia", "category": ["russia", "europe"]},
+  {"imageId": "1122575274904894", "lat": 59.937, "lng": 30.313, "country": "Russia", "category": ["russia", "europe"]},
+  {"imageId": "1000125997471829", "lat": 55.796, "lng": 49.103, "country": "Russia", "category": ["russia"]},
+  {"imageId": "1351299605250962", "lat": 55.031, "lng": 82.918, "country": "Russia", "category": ["russia", "asia"]},
+  {"imageId": "1002948308038803", "lat": 56.836, "lng": 60.609, "country": "Russia", "category": ["russia"]},
+  {"imageId": "1001734603564359", "lat": 56.320, "lng": 43.980, "country": "Russia", "category": ["russia"]},
+  {"imageId": "1106744146505807", "lat": 43.114, "lng": 131.895, "country": "Russia", "category": ["russia", "asia"]},
+  {"imageId": "1187577915014666", "lat": 43.584, "lng": 39.718, "country": "Russia", "category": ["russia"]},
+  {"imageId": "1207861546393230", "lat": 54.710, "lng": 20.510, "country": "Russia", "category": ["russia", "europe"]},
+  {"imageId": "1009947626599115", "lat": 47.226, "lng": 39.717, "country": "Russia", "category": ["russia"]},
+  {"imageId": "1003155836886628", "lat": 53.194, "lng": 50.098, "country": "Russia", "category": ["russia"]},
+  {"imageId": "798608930762806", "lat": 56.009, "lng": 92.870, "country": "Russia", "category": ["russia", "asia"]},
+  {"imageId": "1064567360701115", "lat": 48.706, "lng": 44.512, "country": "Russia", "category": ["russia"]},
+  {"imageId": "1005158043350933", "lat": 54.733, "lng": 55.966, "country": "Russia", "category": ["russia"]},
+  {"imageId": "1343943762644735", "lat": 68.970, "lng": 33.071, "country": "Russia", "category": ["russia", "europe"]}
 ]
