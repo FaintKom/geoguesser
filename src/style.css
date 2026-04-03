@@ -329,22 +329,48 @@ body {
   font-size: 1.2rem;
 }
 
-.game__minimap {
+.game__map-wrap {
   position: absolute;
-  bottom: 80px;
+  bottom: 70px;
   right: 16px;
   width: 300px;
   height: 200px;
-  border: 2px solid var(--neon-cyan);
-  box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
   z-index: 1000;
-  transition: width 0.3s, height 0.3s;
-  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-.game__minimap:hover {
-  width: 450px;
-  height: 300px;
+.game__map-wrap.expanded {
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  bottom: 70px;
+  width: auto;
+  height: auto;
+}
+
+.game__minimap {
+  width: 100%;
+  height: 100%;
+  border: 2px solid var(--neon-cyan);
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+}
+
+.game__map-toggle {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  z-index: 1001;
+  width: 32px;
+  height: 32px;
+  background: rgba(10, 10, 26, 0.9);
+  border: 1px solid var(--neon-cyan);
+  color: var(--neon-cyan);
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
 
 .game__hud {
@@ -639,22 +665,28 @@ body {
   }
 
   /* Game View */
-  .game__minimap {
+  .game__map-wrap {
     width: 140px;
     height: 100px;
-    bottom: 60px;
+    bottom: 56px;
     right: 8px;
+  }
+
+  .game__map-wrap.expanded {
+    top: 48px;
+    left: 8px;
+    right: 8px;
+    bottom: 56px;
+  }
+
+  .game__minimap {
     border-width: 1px;
   }
 
-  .game__minimap:hover,
-  .game__minimap:active,
-  .game__minimap.expanded {
-    width: 85vw;
-    height: 45vh;
-    bottom: 60px;
-    right: 50%;
-    transform: translateX(50%);
+  .game__map-toggle {
+    width: 28px;
+    height: 28px;
+    font-size: 0.85rem;
   }
 
   .game__hud {
@@ -786,9 +818,9 @@ body {
     letter-spacing: 4px;
   }
 
-  .game__minimap {
-    width: 120px;
-    height: 85px;
+  .game__map-wrap {
+    width: 110px;
+    height: 80px;
   }
 
   .game__timer {
@@ -796,51 +828,6 @@ body {
   }
 }
 
-/* Touch device: tap minimap to expand/collapse */
-@media (hover: none) {
-  .game__minimap:hover {
-    width: 140px;
-    height: 100px;
-    transform: none;
-    right: 8px;
-  }
-}
-
-/* Mobile map expand button */
-.game__map-expand {
-  position: absolute;
-  bottom: 60px;
-  right: 8px;
-  z-index: 1001;
-  font-family: var(--font-display);
-  font-size: 0.7rem;
-  color: var(--neon-cyan);
-  background: rgba(10, 10, 26, 0.9);
-  border: 1px solid var(--neon-cyan);
-  padding: 6px 12px;
-  cursor: pointer;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-@media (min-width: 769px) {
-  .game__map-expand {
-    display: none;
-  }
-}
-
-@media (max-width: 768px) {
-  .game__minimap.expanded + .game__map-expand,
-  .game__map-expand {
-    bottom: auto;
-    right: 8px;
-  }
-
-  .game__minimap.expanded ~ .game__map-expand {
-    top: 50px;
-    bottom: auto;
-  }
-}
 
 /* Scrollbar */
 ::-webkit-scrollbar {

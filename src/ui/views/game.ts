@@ -23,7 +23,10 @@ export function renderGame(): HTMLElement {
       <div class="game__round-info" id="round-info">Round --/--</div>
       <div id="timer-container"></div>
     </div>
-    <div class="game__minimap" id="guess-map-container"></div>
+    <div class="game__map-wrap" id="map-wrap">
+      <div class="game__minimap" id="guess-map-container"></div>
+      <button class="game__map-toggle" id="btn-map-toggle" title="Развернуть карту">&#x26F6;</button>
+    </div>
     <div class="game__bottom-bar">
       <div class="game__players-status" id="players-status"></div>
       <button class="btn btn--green" id="btn-confirm" disabled>ПОДТВЕРДИТЬ</button>
@@ -53,21 +56,17 @@ export function renderGame(): HTMLElement {
       if (engine.currentImageId) viewer.showImage(engine.currentImageId);
     }
 
-    // Mobile: tap minimap to expand/collapse
+    // Toggle map fullscreen (works on both mobile and desktop)
+    const mapWrap = document.getElementById('map-wrap')!;
     const mapContainer = document.getElementById('guess-map-container')!;
-    const isTouchDevice = 'ontouchstart' in window;
-    if (isTouchDevice) {
-      const expandBtn = document.createElement('div');
-      expandBtn.className = 'game__map-expand';
-      expandBtn.textContent = 'КАРТА';
-      expandBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        mapContainer.classList.toggle('expanded');
-        guessMap.resize();
-        expandBtn.textContent = mapContainer.classList.contains('expanded') ? 'СВЕРНУТЬ' : 'КАРТА';
-      });
-      mapContainer.parentElement?.appendChild(expandBtn);
-    }
+    const btnToggle = document.getElementById('btn-map-toggle')!;
+
+    btnToggle.addEventListener('click', () => {
+      mapWrap.classList.toggle('expanded');
+      guessMap.resize();
+      btnToggle.textContent = mapWrap.classList.contains('expanded') ? '\u2716' : '\u26F6';
+      btnToggle.title = mapWrap.classList.contains('expanded') ? 'Свернуть карту' : 'Развернуть карту';
+    });
 
     // Enable confirm button when map is clicked
     mapContainer.addEventListener('click', () => {
