@@ -1,6 +1,7 @@
 import { getEngine } from '../../main';
 import { navigate } from '../router';
 import { renderPlayerList } from '../components/player-list';
+import { unlockAudio } from '../components/timer';
 import { CATEGORIES } from '../../config';
 import type { LocationCategory } from '../../types';
 import type { UIEvent } from '../../lib/game-engine';
@@ -77,6 +78,7 @@ export function renderLobby(): HTMLElement {
     // Start game
     const btnStart = document.getElementById('btn-start');
     btnStart?.addEventListener('click', () => {
+      unlockAudio();
       const rounds = parseInt((document.getElementById('setting-rounds') as HTMLSelectElement).value);
       const time = parseInt((document.getElementById('setting-time') as HTMLSelectElement).value);
       const category = (document.getElementById('setting-category') as HTMLSelectElement).value as LocationCategory;

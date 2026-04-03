@@ -3,7 +3,7 @@ import { navigate } from '../router';
 import { setCleanup } from '../router';
 import { MapillaryViewer } from '../components/mapillary-viewer';
 import { GuessMap } from '../components/guess-map';
-import { createTimerElement, updateTimer } from '../components/timer';
+import { createTimerElement, updateTimer, unlockAudio } from '../components/timer';
 import { PLAYER_COLORS } from '../../config';
 import type { UIEvent } from '../../lib/game-engine';
 
@@ -78,6 +78,7 @@ export function renderGame(): HTMLElement {
 
     // Confirm guess
     document.getElementById('btn-confirm')!.addEventListener('click', () => {
+      unlockAudio();
       const guess = guessMap.getGuess();
       if (!guess || hasGuessed) return;
 
