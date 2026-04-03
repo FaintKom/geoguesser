@@ -1,9 +1,36 @@
 import { getEngine } from '../../main';
 import { navigate } from '../router';
+import { GameEngine } from '../../lib/game-engine';
 
 export function renderLanding(): HTMLElement {
   const div = document.createElement('div');
   div.className = 'landing';
+
+  // Try to reconnect from saved session
+  const saved = GameEngine.getSavedSession();
+  if (saved && saved.roomCode) {
+    const engine = getEngine();
+    console.log('[GeoGuesser] Reconnecting to room:', saved.roomCode, 'as', saved.isHost ? 'host' : 'client');
+
+    const reconnect = async () => {
+      try {
+        if (saved.isHost) {
+          // Host can't fully reconnect (room data is lost), navigate to landing
+          engine.clearSessionPublic();
+        } else {
+          await engine.joinRoom(saved.roomCode, saved.playerName);
+          if (engine.state === 'lobby') {
+            navigate('#/lobby');
+            return;
+          }
+        }
+      } catch {
+        console.log('[GeoGuesser] Reconnect failed, showing landing');
+        engine.clearSessionPublic();
+      }
+    };
+    reconnect();
+  }
 
   div.innerHTML = `
     <h1 class="title title--glow landing__logo">GEOGUESSER</h1>

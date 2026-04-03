@@ -151,7 +151,7 @@ export class HostPeerManager {
 
 export class ClientPeerManager {
   connId = '';
-  private roomCode = '';
+  roomCode = '';
   private onMessageHandler: HostMessageHandler | null = null;
   private onDisconnectHandler: (() => void) | null = null;
   private cleanupFns: (() => void)[] = [];

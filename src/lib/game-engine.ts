@@ -54,7 +54,39 @@ export class GameEngine {
   offUI(handler: UIUpdateHandler) { this.uiHandlers = this.uiHandlers.filter(h => h !== handler); }
 
   private emit(event: UIEvent) { for (const h of this.uiHandlers) h(event); }
-  private setState(s: GameState) { this.state = s; for (const h of this.stateChangeHandlers) h(s); }
+  private setState(s: GameState) {
+    this.state = s;
+    for (const h of this.stateChangeHandlers) h(s);
+  }
+
+  // === Session persistence ===
+  private saveSession() {
+    const roomCode = this.isHost ? this.hostPeer?.roomCode : this.clientPeer?.roomCode;
+    const session = {
+      roomCode: roomCode || '',
+      playerName: this.localPlayerName,
+      isHost: this.isHost,
+    };
+    localStorage.setItem('geoguesser_session', JSON.stringify(session));
+  }
+
+  private clearSession() {
+    localStorage.removeItem('geoguesser_session');
+  }
+
+  clearSessionPublic() {
+    this.clearSession();
+  }
+
+  static getSavedSession(): { roomCode: string; playerName: string; isHost: boolean } | null {
+    try {
+      const data = localStorage.getItem('geoguesser_session');
+      if (!data) return null;
+      return JSON.parse(data);
+    } catch {
+      return null;
+    }
+  }
 
   // === HOST: Create Room ===
   async createRoom(playerName: string) {
@@ -87,6 +119,7 @@ export class GameEngine {
       });
 
       this.setState('lobby');
+      this.saveSession();
     } catch (err) {
       console.error('[GeoGuesser] Failed to create room:', err);
       this.emit({ type: 'error', message: 'Не удалось создать комнату. Попробуй ещё раз.' });
@@ -119,9 +152,11 @@ export class GameEngine {
 
       this.emit({ type: 'joined_room' });
       this.setState('lobby');
+      this.saveSession();
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error('[GeoGuesser] Failed to join:', msg);
+      this.clearSession();
       this.emit({ type: 'error', message: `Не удалось подключиться: ${msg}` });
     }
   }
@@ -438,5 +473,6 @@ export class GameEngine {
     this.clientPeer = null;
     this.state = 'idle';
     this.players = [];
+    this.clearSession();
   }
 }
