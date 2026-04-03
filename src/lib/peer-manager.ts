@@ -16,6 +16,33 @@ function generateRoomCode(): string {
 
 const PEER_PREFIX = 'geoguesser-';
 
+// ICE servers config with TURN relay for NAT traversal
+const ICE_SERVERS: RTCIceServer[] = [
+  { urls: 'stun:stun.l.google.com:19302' },
+  { urls: 'stun:stun1.l.google.com:19302' },
+  {
+    urls: 'turn:openrelay.metered.ca:80',
+    username: 'openrelayproject',
+    credential: 'openrelayproject',
+  },
+  {
+    urls: 'turn:openrelay.metered.ca:443',
+    username: 'openrelayproject',
+    credential: 'openrelayproject',
+  },
+  {
+    urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+    username: 'openrelayproject',
+    credential: 'openrelayproject',
+  },
+];
+
+const PEER_CONFIG = {
+  config: {
+    iceServers: ICE_SERVERS,
+  },
+};
+
 export class HostPeerManager {
   peer: Peer | null = null;
   connections: Map<string, DataConnection> = new Map();
@@ -43,7 +70,7 @@ export class HostPeerManager {
       const peerId = PEER_PREFIX + this.roomCode;
       let settled = false;
 
-      this.peer = new Peer(peerId);
+      this.peer = new Peer(peerId, PEER_CONFIG);
 
       const timeout = setTimeout(() => {
         if (!settled) {
@@ -136,7 +163,7 @@ export class ClientPeerManager {
     return new Promise((resolve, reject) => {
       let settled = false;
 
-      this.peer = new Peer();
+      this.peer = new Peer(PEER_CONFIG);
 
       const timeout = setTimeout(() => {
         if (!settled) {
