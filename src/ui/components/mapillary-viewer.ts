@@ -30,20 +30,26 @@ export class MapillaryViewer {
 
     container.innerHTML = '';
 
-    // Wrapper clips the oversized iframe to hide Google UI
+    // Wrapper = exact container size, overflow hidden clips the iframe
     this.wrapper = document.createElement('div');
     this.wrapper.style.cssText = `
       position: absolute;
-      top: -60px;
-      left: -10px;
-      right: -10px;
-      bottom: -40px;
+      top: 0; left: 0; right: 0; bottom: 0;
       overflow: hidden;
     `;
 
+    // iframe is taller than wrapper and shifted up to crop Google's top UI
+    // and wider to crop side elements
     const iframe = document.createElement('iframe');
     iframe.src = `https://www.google.com/maps?layer=c&cbll=${lat},${lng}&cbp=12,0,,0,0&output=svembed`;
-    iframe.style.cssText = 'width:100%;height:100%;border:none;';
+    iframe.style.cssText = `
+      position: absolute;
+      top: -80px;
+      left: -10px;
+      width: calc(100% + 20px);
+      height: calc(100% + 120px);
+      border: none;
+    `;
     iframe.allow = 'fullscreen';
     iframe.loading = 'eager';
 
