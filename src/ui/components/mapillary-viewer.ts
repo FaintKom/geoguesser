@@ -44,18 +44,33 @@ export class MapillaryViewer {
     container.appendChild(this.iframe);
 
     // Hide Google UI elements that show location name (spoilers!)
-    const overlay = document.createElement('div');
-    overlay.style.cssText = `
+    // Top overlay — covers location name, "View on Google Maps" link, pin icon
+    const overlayTop = document.createElement('div');
+    overlayTop.style.cssText = `
       position: absolute;
       top: 0;
       left: 0;
-      right: 0;
-      height: 50px;
-      background: linear-gradient(to bottom, rgba(10,10,26,0.95) 0%, rgba(10,10,26,0.7) 60%, transparent 100%);
-      pointer-events: none;
+      width: 250px;
+      height: 70px;
+      background: rgba(10,10,26,0.98);
       z-index: 10;
+      pointer-events: auto;
     `;
-    container.appendChild(overlay);
+    container.appendChild(overlayTop);
+
+    // Bottom overlay — covers Google logo, copyright, "Report a problem"
+    const overlayBottom = document.createElement('div');
+    overlayBottom.style.cssText = `
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 30px;
+      background: rgba(10,10,26,0.98);
+      z-index: 10;
+      pointer-events: auto;
+    `;
+    container.appendChild(overlayBottom);
   }
 
   resize() {
