@@ -1,73 +1,71 @@
-import { Viewer } from 'mapillary-js';
-import { MAPILLARY_ACCESS_TOKEN } from '../../config';
-
 export class MapillaryViewer {
-  private viewer: Viewer | null = null;
   private containerId: string;
+  private iframe: HTMLIFrameElement | null = null;
 
   constructor(containerId: string) {
     this.containerId = containerId;
   }
 
   init() {
-    const container = document.getElementById(this.containerId);
-    if (!container) return;
-
-    // Clear placeholder before MapillaryJS takes over the container
-    container.innerHTML = '';
-
-    try {
-      this.viewer = new Viewer({
-        accessToken: MAPILLARY_ACCESS_TOKEN,
-        container: this.containerId,
-        component: {
-          cover: false,
-          bearing: true,
-          zoom: true,
-        },
-      });
-
-      this.viewer.on('dataloading', (event) => {
-        console.log('[GeoGuesser] Mapillary loading:', event.loading);
-      });
-    } catch (err) {
-      console.error('[GeoGuesser] Failed to init MapillaryJS:', err);
-      container.innerHTML = `<div class="game__viewer-placeholder">Failed to initialize street view</div>`;
-    }
+    // Nothing needed on init
   }
 
   async showImage(imageId: string) {
-    if (!this.viewer) return;
-    try {
-      console.log('[GeoGuesser] Loading image:', imageId);
-      await this.viewer.moveTo(imageId);
-      console.log('[GeoGuesser] Image loaded successfully');
-    } catch (err) {
-      console.error('[GeoGuesser] Failed to load image:', imageId, err);
-      // Fallback to iframe embed
-      const container = document.getElementById(this.containerId);
-      if (container) {
-        this.viewer?.remove();
-        this.viewer = null;
-        container.innerHTML = `<iframe
-          src="https://www.mapillary.com/embed?image_key=${imageId}&style=photo"
-          style="width:100%;height:100%;border:none;"
-          allow="fullscreen"
-        ></iframe>`;
-      }
+    const container = document.getElementById(this.containerId);
+    if (!container) return;
+
+    // imageId format: "lat,lng" — we use coordinates for Google Street View
+    // For backward compat, also accept Mapillary IDs (numeric)
+    let lat: number, lng: number;
+
+    if (imageId.includes(',')) {
+      const parts = imageId.split(',');
+      lat = parseFloat(parts[0]);
+      lng = parseFloat(parts[1]);
+    } else {
+      // Fallback: use Mapillary embed
+      container.innerHTML = '';
+      this.iframe = document.createElement('iframe');
+      this.iframe.src = `https://www.mapillary.com/embed?image_key=${imageId}&style=photo`;
+      this.iframe.style.cssText = 'width:100%;height:100%;border:none;';
+      container.appendChild(this.iframe);
+      return;
     }
+
+    container.innerHTML = '';
+
+    // Google Street View embed — free, no API key needed
+    this.iframe = document.createElement('iframe');
+    this.iframe.src = `https://www.google.com/maps?layer=c&cbll=${lat},${lng}&cbp=12,0,,0,0&output=svembed`;
+    this.iframe.style.cssText = 'width:100%;height:100%;border:none;';
+    this.iframe.allow = 'fullscreen';
+    this.iframe.loading = 'eager';
+
+    container.appendChild(this.iframe);
+
+    // Hide Google UI elements that show location name (spoilers!)
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 50px;
+      background: linear-gradient(to bottom, rgba(10,10,26,0.95) 0%, rgba(10,10,26,0.7) 60%, transparent 100%);
+      pointer-events: none;
+      z-index: 10;
+    `;
+    container.appendChild(overlay);
   }
 
   resize() {
-    this.viewer?.resize();
+    // iframe auto-resizes
   }
 
   destroy() {
-    try {
-      this.viewer?.remove();
-    } catch {
-      // ignore cleanup errors
+    if (this.iframe) {
+      this.iframe.src = '';
+      this.iframe = null;
     }
-    this.viewer = null;
   }
 }
