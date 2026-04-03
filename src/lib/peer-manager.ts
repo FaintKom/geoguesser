@@ -57,18 +57,19 @@ export class HostPeerManager {
         state: 'lobby',
       });
 
+      const createdAt = Date.now();
       console.log('[GeoGuesser] Room created:', this.roomCode);
 
-      // Listen for peer messages
+      // Listen for peer messages (only new ones)
       const messagesRef = ref(db, `rooms/${this.roomCode}/messages`);
       onChildAdded(messagesRef, (snap) => {
         const data = snap.val();
-        if (data && data.from !== this.playerId) {
+        if (data && data.from !== this.playerId && data.ts >= createdAt) {
           console.log('[GeoGuesser] Host got message:', data.type, 'from:', data.from);
           this.onMessageHandler?.(data as PeerMessage, data.from);
-          // Remove processed message
-          remove(snap.ref);
         }
+        // Always clean up processed messages
+        remove(snap.ref);
       });
       this.cleanupFns.push(() => off(messagesRef));
 
@@ -113,6 +114,11 @@ export class HostPeerManager {
     if (!this.roomCode) return;
     const broadcastRef = ref(db, `rooms/${this.roomCode}/broadcast`);
     push(broadcastRef, { ...message, ts: Date.now() });
+  }
+
+  async clearBroadcast() {
+    if (!this.roomCode) return;
+    await remove(ref(db, `rooms/${this.roomCode}/broadcast`));
   }
 
   sendTo(_connId: string, message: HostMessage) {
@@ -170,13 +176,14 @@ export class ClientPeerManager {
     });
 
     this.connection = true;
+    const joinedAt = Date.now();
     console.log('[GeoGuesser] Joined room:', this.roomCode);
 
-    // Listen for broadcast messages from host
+    // Listen for broadcast messages from host (only new ones after join)
     const broadcastRef = ref(db, `rooms/${this.roomCode}/broadcast`);
     onChildAdded(broadcastRef, (snap) => {
       const data = snap.val();
-      if (data) {
+      if (data && data.ts >= joinedAt) {
         console.log('[GeoGuesser] Client got broadcast:', data.type);
         this.onMessageHandler?.(data as HostMessage);
       }

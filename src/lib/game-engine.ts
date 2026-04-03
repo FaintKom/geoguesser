@@ -214,7 +214,10 @@ export class GameEngine {
     this.startNextRound();
   }
 
-  private startNextRound() {
+  private async startNextRound() {
+    // Clear old broadcast messages to prevent bloat
+    await this.hostPeer!.clearBroadcast();
+
     this.currentRound++;
     const location = this.locations[this.currentRound - 1];
     this.currentImageId = location.imageId;
