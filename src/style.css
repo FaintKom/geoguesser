@@ -590,6 +590,285 @@ body {
   max-width: 500px;
 }
 
+/* ============ CODENAMES ============ */
+.cn-room {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.cn-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 16px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.cn-title {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: var(--neon-magenta);
+  text-shadow: 0 0 8px var(--neon-magenta);
+  letter-spacing: 2px;
+}
+
+.cn-room-code {
+  cursor: pointer;
+}
+
+.cn-status {
+  margin-left: auto;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  letter-spacing: 1px;
+}
+
+.cn-layout {
+  display: grid;
+  grid-template-columns: 160px 1fr 160px;
+  flex: 1;
+  overflow: hidden;
+}
+
+.cn-team {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+}
+
+.cn-team--red {
+  background: rgba(255, 68, 102, 0.08);
+  border-right: 2px solid rgba(255, 68, 102, 0.3);
+}
+
+.cn-team--blue {
+  background: rgba(68, 136, 255, 0.08);
+  border-left: 2px solid rgba(68, 136, 255, 0.3);
+}
+
+.cn-team__title {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  letter-spacing: 2px;
+  text-align: center;
+}
+
+.cn-team__title--red { color: #ff4466; }
+.cn-team__title--blue { color: #4488ff; }
+
+.cn-team__score {
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: var(--text-primary);
+}
+
+.cn-player {
+  font-size: 0.85rem;
+  padding: 4px 8px;
+  color: var(--text-secondary);
+}
+
+.cn-player--captain {
+  color: var(--neon-orange);
+  font-weight: 600;
+}
+
+.cn-team__btn {
+  font-size: 0.7rem !important;
+  padding: 8px 12px !important;
+  width: 100%;
+}
+
+/* Board */
+.cn-center {
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  gap: 12px;
+  overflow-y: auto;
+}
+
+.cn-board {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  flex: 1;
+  min-height: 0;
+}
+
+.cn-board__empty {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  min-height: 200px;
+}
+
+.cn-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 8px 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--bg-card);
+  border: 2px solid var(--border-color);
+  border-radius: 4px;
+  transition: all 0.3s;
+  word-break: break-word;
+  min-height: 50px;
+  user-select: none;
+}
+
+.cn-card--clickable {
+  cursor: pointer;
+}
+
+.cn-card--clickable:hover {
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+  transform: scale(1.03);
+}
+
+/* Revealed cards */
+.cn-card--revealed.cn-card--red {
+  background: rgba(255, 68, 102, 0.3);
+  border-color: #ff4466;
+  color: #ff4466;
+  box-shadow: 0 0 8px rgba(255, 68, 102, 0.3);
+}
+
+.cn-card--revealed.cn-card--blue {
+  background: rgba(68, 136, 255, 0.3);
+  border-color: #4488ff;
+  color: #4488ff;
+  box-shadow: 0 0 8px rgba(68, 136, 255, 0.3);
+}
+
+.cn-card--revealed.cn-card--neutral {
+  background: rgba(170, 153, 119, 0.2);
+  border-color: #aa9977;
+  color: #aa9977;
+  opacity: 0.6;
+}
+
+.cn-card--revealed.cn-card--assassin {
+  background: rgba(26, 26, 26, 0.9);
+  border-color: #ff0033;
+  color: #ff0033;
+  box-shadow: 0 0 12px rgba(255, 0, 51, 0.5);
+}
+
+/* Captain hints (unrevealed, captain view) */
+.cn-card--hint-red {
+  border-color: rgba(255, 68, 102, 0.5);
+  background: rgba(255, 68, 102, 0.1);
+}
+
+.cn-card--hint-blue {
+  border-color: rgba(68, 136, 255, 0.5);
+  background: rgba(68, 136, 255, 0.1);
+}
+
+.cn-card--hint-neutral {
+  border-color: rgba(170, 153, 119, 0.4);
+  background: rgba(170, 153, 119, 0.08);
+}
+
+.cn-card--hint-assassin {
+  border-color: rgba(255, 0, 51, 0.6);
+  background: rgba(255, 0, 51, 0.1);
+}
+
+/* Clue area */
+.cn-clue-area {
+  text-align: center;
+  min-height: 40px;
+}
+
+.cn-clue-form {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+}
+
+.cn-clue-input {
+  width: auto;
+  max-width: 200px;
+}
+
+.cn-clue-count {
+  max-width: 60px;
+  text-align: center;
+}
+
+.cn-clue-btn {
+  padding: 12px 20px !important;
+}
+
+.cn-clue-display {
+  font-family: var(--font-display);
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+}
+
+.cn-clue-word {
+  font-size: 1.4rem;
+  color: var(--neon-cyan);
+  text-shadow: 0 0 8px var(--neon-cyan);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.cn-clue-num {
+  font-size: 1.4rem;
+  color: var(--neon-orange);
+}
+
+.cn-clue-left {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.cn-waiting {
+  color: var(--text-secondary);
+  font-style: italic;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.cn-winner {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 900;
+  letter-spacing: 3px;
+  text-shadow: 0 0 15px currentColor;
+}
+
+.cn-controls {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.cn-control-btn {
+  font-size: 0.75rem !important;
+  padding: 10px 20px !important;
+}
+
 /* ============ MOBILE ============ */
 @media (max-width: 768px) {
   /* Landing */
@@ -822,6 +1101,48 @@ body {
   .leaderboard__full-list {
     width: 100%;
   }
+}
+
+@media (max-width: 768px) {
+  /* Codenames mobile */
+  .cn-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto;
+  }
+
+  .cn-team {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px;
+    align-items: center;
+  }
+
+  .cn-team--red {
+    border-right: none;
+    border-bottom: 2px solid rgba(255, 68, 102, 0.3);
+  }
+
+  .cn-team--blue {
+    border-left: none;
+    border-top: 2px solid rgba(68, 136, 255, 0.3);
+  }
+
+  .cn-team__title { font-size: 0.7rem; }
+  .cn-team__score { font-size: 0.9rem; }
+  .cn-team__btn { width: auto !important; }
+
+  .cn-card {
+    font-size: 0.65rem;
+    min-height: 40px;
+    padding: 4px 2px;
+  }
+
+  .cn-clue-word { font-size: 1rem; }
+  .cn-clue-num { font-size: 1rem; }
+
+  .cn-header { padding: 6px 10px; gap: 8px; }
+  .cn-title { font-size: 0.8rem; }
 }
 
 /* Small phones */
