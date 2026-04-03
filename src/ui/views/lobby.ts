@@ -1,6 +1,8 @@
 import { getEngine } from '../../main';
 import { navigate } from '../router';
 import { renderPlayerList } from '../components/player-list';
+import { CATEGORIES } from '../../config';
+import type { LocationCategory } from '../../types';
 import type { UIEvent } from '../../lib/game-engine';
 
 export function renderLobby(): HTMLElement {
@@ -9,6 +11,10 @@ export function renderLobby(): HTMLElement {
   div.className = 'lobby';
 
   const roomCode = engine.isHost ? engine.hostPeer?.roomCode || '' : '';
+
+  const categoryOptions = Object.entries(CATEGORIES)
+    .map(([value, label]) => `<option value="${value}"${value === 'all' ? ' selected' : ''}>${label}</option>`)
+    .join('');
 
   div.innerHTML = `
     <h1 class="title title--glow lobby__title">ЛОББИ</h1>
@@ -22,6 +28,12 @@ export function renderLobby(): HTMLElement {
     <div id="player-list-container"></div>
     ${engine.isHost ? `
       <div class="lobby__settings">
+        <div class="lobby__setting">
+          <label>Категория</label>
+          <select id="setting-category">
+            ${categoryOptions}
+          </select>
+        </div>
         <div class="lobby__setting">
           <label>Раунды</label>
           <select id="setting-rounds">
@@ -66,7 +78,8 @@ export function renderLobby(): HTMLElement {
     btnStart?.addEventListener('click', () => {
       const rounds = parseInt((document.getElementById('setting-rounds') as HTMLSelectElement).value);
       const time = parseInt((document.getElementById('setting-time') as HTMLSelectElement).value);
-      engine.startGame({ totalRounds: rounds, timePerRound: time });
+      const category = (document.getElementById('setting-category') as HTMLSelectElement).value as LocationCategory;
+      engine.startGame({ totalRounds: rounds, timePerRound: time, category });
     });
 
     // Listen for updates

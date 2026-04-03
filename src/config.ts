@@ -1,8 +1,18 @@
-export const MAPILLARY_ACCESS_TOKEN = 'MLY|YOUR_TOKEN_HERE';
+export const MAPILLARY_ACCESS_TOKEN = 'MLY|26902555199342476|88b7bc5fddb1d72b9907de39aceefa4e';
 
 export const DEFAULT_SETTINGS = {
   totalRounds: 5,
   timePerRound: 60,
+  category: 'all' as const,
+};
+
+export const CATEGORIES: Record<string, string> = {
+  all: 'Весь мир',
+  capitals: 'Столицы мира',
+  europe: 'Европа',
+  americas: 'Америка',
+  russia: 'Россия',
+  asia: 'Азия',
 };
 
 export const SCORE_MAX = 5000;

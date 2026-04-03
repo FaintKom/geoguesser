@@ -1,8 +1,11 @@
+export type LocationCategory = 'all' | 'capitals' | 'europe' | 'americas' | 'russia' | 'asia';
+
 export interface Location {
   imageId: string;
   lat: number;
   lng: number;
   country: string;
+  category: LocationCategory[];
 }
 
 export interface Player {
@@ -23,6 +26,7 @@ export interface Guess {
 export interface GameSettings {
   totalRounds: number;
   timePerRound: number;
+  category: LocationCategory;
 }
 
 export type GameState = 'idle' | 'lobby' | 'playing' | 'round_result' | 'game_over';

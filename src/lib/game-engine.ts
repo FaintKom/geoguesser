@@ -184,7 +184,7 @@ export class GameEngine {
     if (!this.isHost) return;
 
     this.settings = { ...this.settings, ...settings };
-    this.locations = pickRandomLocations(this.settings.totalRounds);
+    this.locations = pickRandomLocations(this.settings.totalRounds, this.settings.category);
     this.currentRound = 0;
     this.totalScores = {};
     for (const p of this.players) {
