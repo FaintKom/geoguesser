@@ -21,7 +21,7 @@ export function renderLobby(): HTMLElement {
     ${engine.isHost ? `
       <p style="color: var(--text-secondary); margin-bottom: 4px;">Код комнаты:</p>
       <div class="room-code" id="room-code">${roomCode}</div>
-      <p style="color: var(--text-secondary); font-size: 0.85rem;">Нажми чтобы скопировать</p>
+      <p style="color: var(--text-secondary); font-size: 0.85rem;">Нажми чтобы скопировать ссылку-приглашение</p>
     ` : `
       <p class="lobby__waiting">Подключено к комнате</p>
     `}
@@ -61,16 +61,17 @@ export function renderLobby(): HTMLElement {
   requestAnimationFrame(() => {
     updatePlayerList();
 
-    // Copy room code
+    // Copy invite link
     const codeEl = document.getElementById('room-code');
     codeEl?.addEventListener('click', () => {
-      navigator.clipboard.writeText(roomCode);
+      const url = `${window.location.origin}${window.location.pathname}?room=${roomCode}`;
+      navigator.clipboard.writeText(url);
       codeEl.style.color = '#00ff88';
-      codeEl.textContent = 'СКОПИРОВАНО!';
+      codeEl.textContent = 'ССЫЛКА СКОПИРОВАНА!';
       setTimeout(() => {
         codeEl.style.color = '';
         codeEl.textContent = roomCode;
-      }, 1500);
+      }, 2000);
     });
 
     // Start game

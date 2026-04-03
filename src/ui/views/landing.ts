@@ -29,6 +29,16 @@ export function renderLanding(): HTMLElement {
     const btnJoin = document.getElementById('btn-join')!;
     const errorEl = document.getElementById('landing-error')!;
 
+    // Auto-fill room code from URL ?room=XXXXX
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomFromUrl = urlParams.get('room');
+    if (roomFromUrl) {
+      const codeInput = document.getElementById('join-code') as HTMLInputElement;
+      codeInput.value = roomFromUrl.toUpperCase();
+      // Focus on name input so user just types name and clicks join
+      (document.getElementById('join-name') as HTMLInputElement).focus();
+    }
+
     btnCreate.addEventListener('click', async () => {
       const name = (document.getElementById('host-name') as HTMLInputElement).value.trim();
       if (!name) return showError('Введи имя');
