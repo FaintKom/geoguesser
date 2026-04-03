@@ -1,0 +1,98 @@
+import { getEngine } from '../../main';
+import { navigate } from '../router';
+import { renderPlayerList } from '../components/player-list';
+import type { UIEvent } from '../../lib/game-engine';
+
+export function renderLobby(): HTMLElement {
+  const engine = getEngine();
+  const div = document.createElement('div');
+  div.className = 'lobby';
+
+  const roomCode = engine.isHost ? engine.hostPeer?.roomCode || '' : '';
+
+  div.innerHTML = `
+    <h1 class="title title--glow lobby__title">ЛОББИ</h1>
+    ${engine.isHost ? `
+      <p style="color: var(--text-secondary); margin-bottom: 4px;">Код комнаты:</p>
+      <div class="room-code" id="room-code">${roomCode}</div>
+      <p style="color: var(--text-secondary); font-size: 0.85rem;">Нажми чтобы скопировать</p>
+    ` : `
+      <p class="lobby__waiting">Подключено к комнате</p>
+    `}
+    <div id="player-list-container"></div>
+    ${engine.isHost ? `
+      <div class="lobby__settings">
+        <div class="lobby__setting">
+          <label>Раунды</label>
+          <select id="setting-rounds">
+            <option value="3">3</option>
+            <option value="5" selected>5</option>
+            <option value="10">10</option>
+          </select>
+        </div>
+        <div class="lobby__setting">
+          <label>Время (сек)</label>
+          <select id="setting-time">
+            <option value="30">30</option>
+            <option value="60" selected>60</option>
+            <option value="90">90</option>
+            <option value="120">120</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn--green" id="btn-start" style="margin-top: 16px;">НАЧАТЬ ИГРУ</button>
+    ` : `
+      <p class="lobby__waiting">Ожидание начала игры...</p>
+    `}
+  `;
+
+  requestAnimationFrame(() => {
+    updatePlayerList();
+
+    // Copy room code
+    const codeEl = document.getElementById('room-code');
+    codeEl?.addEventListener('click', () => {
+      navigator.clipboard.writeText(roomCode);
+      codeEl.style.color = '#00ff88';
+      codeEl.textContent = 'СКОПИРОВАНО!';
+      setTimeout(() => {
+        codeEl.style.color = '';
+        codeEl.textContent = roomCode;
+      }, 1500);
+    });
+
+    // Start game
+    const btnStart = document.getElementById('btn-start');
+    btnStart?.addEventListener('click', () => {
+      const rounds = parseInt((document.getElementById('setting-rounds') as HTMLSelectElement).value);
+      const time = parseInt((document.getElementById('setting-time') as HTMLSelectElement).value);
+      engine.startGame({ totalRounds: rounds, timePerRound: time });
+    });
+
+    // Listen for updates
+    engine.onUI(handleUI);
+    engine.onStateChanged((state) => {
+      if (state === 'playing') {
+        navigate('#/game');
+      }
+    });
+  });
+
+  function handleUI(event: UIEvent) {
+    if (event.type === 'players_updated') {
+      updatePlayerList();
+    }
+    if (event.type === 'round_start') {
+      navigate('#/game');
+    }
+  }
+
+  function updatePlayerList() {
+    const container = document.getElementById('player-list-container');
+    if (!container) return;
+    container.innerHTML = '';
+    container.appendChild(renderPlayerList(engine.players));
+  }
+
+  return div;
+}

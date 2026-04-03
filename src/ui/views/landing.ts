@@ -1,0 +1,87 @@
+import { getEngine } from '../../main';
+import { navigate } from '../router';
+
+export function renderLanding(): HTMLElement {
+  const div = document.createElement('div');
+  div.className = 'landing';
+
+  div.innerHTML = `
+    <h1 class="title title--glow landing__logo">GEOGUESSER</h1>
+    <p class="landing__subtitle">Multiplayer Edition</p>
+    <div class="landing__actions">
+      <div class="card landing__card">
+        <h2>СОЗДАТЬ КОМНАТУ</h2>
+        <input class="input" id="host-name" placeholder="Твоё имя" maxlength="20" />
+        <button class="btn" id="btn-create">СОЗДАТЬ</button>
+      </div>
+      <div class="card landing__card landing__card--join">
+        <h2>ПРИСОЕДИНИТЬСЯ</h2>
+        <input class="input" id="join-name" placeholder="Твоё имя" maxlength="20" />
+        <input class="input" id="join-code" placeholder="Код комнаты" maxlength="6" style="text-transform: uppercase; letter-spacing: 4px; text-align: center;" />
+        <button class="btn btn--magenta" id="btn-join">ВОЙТИ</button>
+      </div>
+    </div>
+    <div id="landing-error" style="color: #ff4466; margin-top: 12px; display: none;"></div>
+  `;
+
+  requestAnimationFrame(() => {
+    const btnCreate = document.getElementById('btn-create')!;
+    const btnJoin = document.getElementById('btn-join')!;
+    const errorEl = document.getElementById('landing-error')!;
+
+    btnCreate.addEventListener('click', async () => {
+      const name = (document.getElementById('host-name') as HTMLInputElement).value.trim();
+      if (!name) return showError('Введи имя');
+
+      btnCreate.textContent = 'СОЗДАЁМ...';
+      (btnCreate as HTMLButtonElement).disabled = true;
+
+      const engine = getEngine();
+      engine.onUI((event) => {
+        if (event.type === 'error') {
+          showError(event.message);
+          btnCreate.textContent = 'СОЗДАТЬ';
+          (btnCreate as HTMLButtonElement).disabled = false;
+        }
+      });
+
+      await engine.createRoom(name);
+      if (engine.state === 'lobby') {
+        navigate('#/lobby');
+      }
+    });
+
+    btnJoin.addEventListener('click', async () => {
+      const name = (document.getElementById('join-name') as HTMLInputElement).value.trim();
+      const code = (document.getElementById('join-code') as HTMLInputElement).value.trim().toUpperCase();
+
+      if (!name) return showError('Введи имя');
+      if (!code || code.length < 4) return showError('Введи код комнаты');
+
+      btnJoin.textContent = 'ПОДКЛЮЧАЕМСЯ...';
+      (btnJoin as HTMLButtonElement).disabled = true;
+
+      const engine = getEngine();
+      engine.onUI((event) => {
+        if (event.type === 'error') {
+          showError(event.message);
+          btnJoin.textContent = 'ВОЙТИ';
+          (btnJoin as HTMLButtonElement).disabled = false;
+        }
+      });
+
+      await engine.joinRoom(code, name);
+      if (engine.state === 'lobby') {
+        navigate('#/lobby');
+      }
+    });
+
+    function showError(msg: string) {
+      errorEl.textContent = msg;
+      errorEl.style.display = 'block';
+      setTimeout(() => { errorEl.style.display = 'none'; }, 3000);
+    }
+  });
+
+  return div;
+}
