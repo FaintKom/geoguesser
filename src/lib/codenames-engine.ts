@@ -71,7 +71,11 @@ export class CodenamesEngine {
 
   players: CNPlayer[] = [];
   gameState: CNGameState | null = null;
-  private lang = 'ru';
+  lang = 'ru';
+  turnTimer = 0;
+  boardSize = 25;
+  private timerInterval: ReturnType<typeof setInterval> | null = null;
+  private timeRemaining = 0;
 
   private uiHandlers: UIHandler[] = [];
 
@@ -214,6 +218,12 @@ export class CodenamesEngine {
     }
   }
 
+  updateSettings(settings: { lang?: string; turnTimer?: number; boardSize?: number }) {
+    if (settings.lang) this.lang = settings.lang;
+    if (settings.turnTimer !== undefined) this.turnTimer = settings.turnTimer;
+    if (settings.boardSize) this.boardSize = settings.boardSize;
+  }
+
   // === HOST: Game actions ===
   setTeam(team: 'red' | 'blue' | null) {
     if (this.isHost) {
@@ -302,18 +312,29 @@ export class CodenamesEngine {
 
   private async startNewGame() {
     if (!this.isHost) return;
+    this.clearTimer();
 
+    const totalCards = this.boardSize;
     const words = await this.loadWords();
-    const shuffled = [...words].sort(() => Math.random() - 0.5).slice(0, 25);
+    const shuffled = [...words].sort(() => Math.random() - 0.5).slice(0, totalCards);
 
-    // Randomly assign: 9 first team, 8 second team, 7 neutral, 1 assassin
+    // Scale card counts based on board size
     const firstTeam = Math.random() < 0.5 ? 'red' : 'blue';
     const secondTeam = firstTeam === 'red' ? 'blue' : 'red';
 
+    let firstCount: number, secondCount: number, neutralCount: number;
+    if (totalCards === 16) {
+      firstCount = 6; secondCount = 5; neutralCount = 4; // +1 assassin = 16
+    } else if (totalCards === 36) {
+      firstCount = 12; secondCount = 11; neutralCount = 12; // +1 assassin = 36
+    } else {
+      firstCount = 9; secondCount = 8; neutralCount = 7; // +1 assassin = 25
+    }
+
     const colors: CNCard['color'][] = [];
-    for (let i = 0; i < 9; i++) colors.push(firstTeam as CNCard['color']);
-    for (let i = 0; i < 8; i++) colors.push(secondTeam as CNCard['color']);
-    for (let i = 0; i < 7; i++) colors.push('neutral');
+    for (let i = 0; i < firstCount; i++) colors.push(firstTeam as CNCard['color']);
+    for (let i = 0; i < secondCount; i++) colors.push(secondTeam as CNCard['color']);
+    for (let i = 0; i < neutralCount; i++) colors.push('neutral');
     colors.push('assassin');
     colors.sort(() => Math.random() - 0.5);
 
@@ -330,14 +351,41 @@ export class CodenamesEngine {
       guessesLeft: 0,
       redScore: 0,
       blueScore: 0,
-      redTotal: firstTeam === 'red' ? 9 : 8,
-      blueTotal: firstTeam === 'blue' ? 9 : 8,
+      redTotal: firstTeam === 'red' ? firstCount : secondCount,
+      blueTotal: firstTeam === 'blue' ? firstCount : secondCount,
       phase: 'clue',
       winner: null,
       lang: this.lang,
     };
 
     this.broadcastGameState();
+    this.startTurnTimer();
+  }
+
+  private startTurnTimer() {
+    this.clearTimer();
+    if (!this.turnTimer || !this.gameState || this.gameState.phase === 'game_over') return;
+
+    this.timeRemaining = this.turnTimer;
+    this.timerInterval = setInterval(() => {
+      this.timeRemaining--;
+      if (this.timeRemaining <= 0) {
+        this.clearTimer();
+        if (this.gameState?.phase === 'clue') {
+          // Captain ran out of time — skip their turn
+          this.switchTurn();
+        } else if (this.gameState?.phase === 'guessing') {
+          this.switchTurn();
+        }
+      }
+    }, 1000);
+  }
+
+  private clearTimer() {
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
   }
 
   private async loadWords(): Promise<string[]> {
@@ -408,6 +456,7 @@ export class CodenamesEngine {
     this.gameState.guessesLeft = 0;
     this.gameState.phase = 'clue';
     this.broadcastGameState();
+    this.startTurnTimer();
   }
 
   private broadcastRoomState() {

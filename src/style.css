@@ -626,6 +626,55 @@ body {
   letter-spacing: 1px;
 }
 
+.cn-settings-btn {
+  background: none;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: color 0.3s;
+}
+
+.cn-settings-btn:hover {
+  color: var(--neon-cyan);
+  border-color: var(--neon-cyan);
+}
+
+.cn-settings-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  align-items: flex-end;
+}
+
+.cn-settings-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cn-settings-row label {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.cn-settings-select {
+  font-size: 0.85rem !important;
+  padding: 6px 8px !important;
+  width: auto;
+}
+
+.cn-settings-apply {
+  font-size: 0.7rem !important;
+  padding: 8px 16px !important;
+}
+
 .cn-layout {
   display: grid;
   grid-template-columns: 160px 1fr 160px;
