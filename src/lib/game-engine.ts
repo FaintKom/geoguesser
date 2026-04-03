@@ -59,22 +59,33 @@ export class GameEngine {
     this.hostPeer = new HostPeerManager();
 
     try {
+      console.log('[GeoGuesser] Creating room...');
       const roomCode = await this.hostPeer.createRoom();
       this.hostPlayerId = this.hostPeer.peer!.id;
       this.localPlayerId = this.hostPlayerId;
+      console.log('[GeoGuesser] Room created:', roomCode, 'PeerID:', this.hostPlayerId);
 
       // Host is a player too
       this.players = [{ id: this.hostPlayerId, name: playerName, isHost: true }];
       this.emit({ type: 'room_created', roomCode });
       this.emit({ type: 'players_updated', players: this.players });
 
-      this.hostPeer.onMessage((msg, connId) => this.handlePeerMessage(msg, connId));
-      this.hostPeer.onPlayerJoin((_connId) => { /* wait for JOIN message */ });
-      this.hostPeer.onPlayerLeave((connId) => this.handlePlayerLeave(connId));
+      this.hostPeer.onMessage((msg, connId) => {
+        console.log('[GeoGuesser] Host got message:', msg.type, 'from:', connId);
+        this.handlePeerMessage(msg, connId);
+      });
+      this.hostPeer.onPlayerJoin((connId) => {
+        console.log('[GeoGuesser] Player connection opened:', connId);
+      });
+      this.hostPeer.onPlayerLeave((connId) => {
+        console.log('[GeoGuesser] Player left:', connId);
+        this.handlePlayerLeave(connId);
+      });
 
       this.setState('lobby');
     } catch (err) {
-      this.emit({ type: 'error', message: 'Failed to create room' });
+      console.error('[GeoGuesser] Failed to create room:', err);
+      this.emit({ type: 'error', message: 'Не удалось создать комнату. Попробуй ещё раз.' });
     }
   }
 
@@ -85,21 +96,29 @@ export class GameEngine {
     this.clientPeer = new ClientPeerManager();
 
     try {
+      console.log('[GeoGuesser] Joining room:', roomCode);
       await this.clientPeer.joinRoom(roomCode);
       this.localPlayerId = this.clientPeer.connId;
+      console.log('[GeoGuesser] Joined! Sending JOIN message...');
 
       this.clientPeer.send({ type: 'JOIN', name: playerName });
 
-      this.clientPeer.onMessage((msg) => this.handleHostMessage(msg));
+      this.clientPeer.onMessage((msg) => {
+        console.log('[GeoGuesser] Client got message:', msg.type);
+        this.handleHostMessage(msg);
+      });
       this.clientPeer.onDisconnect(() => {
-        this.emit({ type: 'error', message: 'Host disconnected' });
+        console.log('[GeoGuesser] Disconnected from host');
+        this.emit({ type: 'error', message: 'Хост отключился' });
         this.setState('idle');
       });
 
       this.emit({ type: 'joined_room' });
       this.setState('lobby');
     } catch (err) {
-      this.emit({ type: 'error', message: 'Failed to join room. Check the code.' });
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('[GeoGuesser] Failed to join:', msg);
+      this.emit({ type: 'error', message: `Не удалось подключиться: ${msg}` });
     }
   }
 

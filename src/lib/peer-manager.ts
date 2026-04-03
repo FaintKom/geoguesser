@@ -134,15 +134,30 @@ export class ClientPeerManager {
 
   async joinRoom(roomCode: string): Promise<void> {
     return new Promise((resolve, reject) => {
+      let settled = false;
+
       this.peer = new Peer();
+
+      const timeout = setTimeout(() => {
+        if (!settled) {
+          settled = true;
+          console.error('[GeoGuesser] Join timeout after 20s');
+          reject(new Error('Connection timeout'));
+        }
+      }, 20000);
 
       this.peer.on('open', (id) => {
         this.connId = id;
+        console.log('[GeoGuesser] Peer open, connecting to host:', PEER_PREFIX + roomCode.toUpperCase());
         const hostId = PEER_PREFIX + roomCode.toUpperCase();
         const conn = this.peer!.connect(hostId, { reliable: true });
 
         conn.on('open', () => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timeout);
           this.connection = conn;
+          console.log('[GeoGuesser] Connected to host!');
 
           conn.on('data', (data) => {
             this.onMessageHandler?.(data as HostMessage);
@@ -160,18 +175,22 @@ export class ClientPeerManager {
         });
 
         conn.on('error', (err) => {
-          reject(err);
-        });
-
-        setTimeout(() => {
-          if (!this.connection) {
-            reject(new Error('Connection timeout'));
+          if (!settled) {
+            settled = true;
+            clearTimeout(timeout);
+            console.error('[GeoGuesser] Connection error:', err);
+            reject(err);
           }
-        }, 10000);
+        });
       });
 
       this.peer.on('error', (err) => {
-        reject(err);
+        if (!settled) {
+          settled = true;
+          clearTimeout(timeout);
+          console.error('[GeoGuesser] Peer error:', err.type, err.message);
+          reject(err);
+        }
       });
     });
   }
