@@ -13,6 +13,8 @@ export const CATEGORIES: Record<string, string> = {
   americas: 'Америка',
   russia: 'Россия',
   asia: 'Азия',
+  landmarks: 'Достопримечательности',
+  nature: 'Природа',
 };
 
 export const SCORE_MAX = 5000;

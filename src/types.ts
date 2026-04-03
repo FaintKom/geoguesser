@@ -1,4 +1,4 @@
-export type LocationCategory = 'all' | 'capitals' | 'europe' | 'americas' | 'russia' | 'asia';
+export type LocationCategory = 'all' | 'capitals' | 'europe' | 'americas' | 'russia' | 'asia' | 'landmarks' | 'nature';
 
 export interface Location {
   imageId: string;
