@@ -1,4 +1,5 @@
 import './style.css';
+import 'mapillary-js/dist/mapillary.css';
 import { registerRoute, initRouter } from './ui/router';
 import { renderLanding } from './ui/views/landing';
 import { renderLobby } from './ui/views/lobby';

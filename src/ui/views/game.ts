@@ -18,9 +18,7 @@ export function renderGame(): HTMLElement {
   const guessedPlayers = new Set<string>();
 
   div.innerHTML = `
-    <div class="game__viewer" id="mapillary-container">
-      <div class="game__viewer-placeholder">Loading street view...</div>
-    </div>
+    <div class="game__viewer" id="mapillary-container"></div>
     <div class="game__hud">
       <div class="game__round-info" id="round-info">Round --/--</div>
       <div id="timer-container"></div>
