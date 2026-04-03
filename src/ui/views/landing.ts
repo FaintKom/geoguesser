@@ -1,10 +1,17 @@
 import { getEngine } from '../../main';
 import { navigate } from '../router';
+import { createNavbar } from '../components/navbar';
 import { GameEngine } from '../../lib/game-engine';
 
 export function renderLanding(): HTMLElement {
+  const wrapper = document.createElement('div');
+  wrapper.style.cssText = 'display:flex;flex-direction:column;min-height:100vh;';
+  wrapper.appendChild(createNavbar({ title: 'GEOGUESSER', backTo: '#/' }));
+
   const div = document.createElement('div');
   div.className = 'landing';
+  div.style.flex = '1';
+  wrapper.appendChild(div);
 
   // Try to reconnect from saved session
   const saved = GameEngine.getSavedSession();
@@ -132,5 +139,5 @@ export function renderLanding(): HTMLElement {
     }
   });
 
-  return div;
+  return wrapper;
 }

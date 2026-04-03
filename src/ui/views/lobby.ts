@@ -1,5 +1,6 @@
 import { getEngine } from '../../main';
 import { navigate } from '../router';
+import { createNavbar } from '../components/navbar';
 import { renderPlayerList } from '../components/player-list';
 import { unlockAudio } from '../components/timer';
 import { CATEGORIES } from '../../config';
@@ -8,8 +9,15 @@ import type { UIEvent } from '../../lib/game-engine';
 
 export function renderLobby(): HTMLElement {
   const engine = getEngine();
+  const wrapper = document.createElement('div');
+  wrapper.style.cssText = 'display:flex;flex-direction:column;min-height:100vh;';
+  wrapper.appendChild(createNavbar({ title: 'GEOGUESSER', backTo: '#/geo' }));
+
   const div = document.createElement('div');
   div.className = 'lobby';
+  div.style.flex = '1';
+  div.style.minHeight = '0';
+  wrapper.appendChild(div);
 
   const roomCode = engine.isHost ? engine.hostPeer?.roomCode || '' : '';
 
@@ -110,5 +118,5 @@ export function renderLobby(): HTMLElement {
     container.appendChild(renderPlayerList(engine.players));
   }
 
-  return div;
+  return wrapper;
 }

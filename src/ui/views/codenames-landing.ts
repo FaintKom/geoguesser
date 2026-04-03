@@ -1,9 +1,16 @@
 import { getCodenamesEngine } from '../../main';
 import { navigate } from '../router';
+import { createNavbar } from '../components/navbar';
 
 export function renderCodenamesLanding(): HTMLElement {
+  const wrapper = document.createElement('div');
+  wrapper.style.cssText = 'display:flex;flex-direction:column;min-height:100vh;';
+  wrapper.appendChild(createNavbar({ title: 'CODENAMES', backTo: '#/' }));
+
   const div = document.createElement('div');
   div.className = 'landing';
+  div.style.flex = '1';
+  wrapper.appendChild(div);
 
   div.innerHTML = `
     <h1 class="title title--glow landing__logo" style="color: var(--neon-magenta); text-shadow: 0 0 10px var(--neon-magenta), 0 0 20px var(--neon-magenta);">CODENAMES</h1>
@@ -26,7 +33,6 @@ export function renderCodenamesLanding(): HTMLElement {
       </div>
     </div>
     <div id="cn-error" style="color: #ff4466; margin-top: 12px; display: none;"></div>
-    <button class="btn" style="margin-top: 20px; font-size: 0.7rem; opacity: 0.5;" id="cn-back">НАЗАД</button>
   `;
 
   requestAnimationFrame(() => {
@@ -81,10 +87,6 @@ export function renderCodenamesLanding(): HTMLElement {
       }
     });
 
-    document.getElementById('cn-back')!.addEventListener('click', () => {
-      navigate('#/');
-    });
-
     function showError(msg: string) {
       errorEl.textContent = msg;
       errorEl.style.display = 'block';
@@ -92,5 +94,5 @@ export function renderCodenamesLanding(): HTMLElement {
     }
   });
 
-  return div;
+  return wrapper;
 }
