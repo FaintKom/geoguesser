@@ -25,13 +25,38 @@ export class HostPeerManager {
   private onPlayerLeaveHandler: ConnectionHandler | null = null;
 
   async createRoom(): Promise<string> {
+    // Retry up to 3 times with fresh room codes
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        return await this.tryCreateRoom();
+      } catch {
+        this.peer?.destroy();
+        this.peer = null;
+      }
+    }
+    throw new Error('Failed to create room after 3 attempts');
+  }
+
+  private tryCreateRoom(): Promise<string> {
     return new Promise((resolve, reject) => {
       this.roomCode = generateRoomCode();
       const peerId = PEER_PREFIX + this.roomCode;
+      let settled = false;
 
       this.peer = new Peer(peerId);
 
+      const timeout = setTimeout(() => {
+        if (!settled) {
+          settled = true;
+          reject(new Error('Connection timeout'));
+        }
+      }, 15000);
+
       this.peer.on('open', () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeout);
+
         this.peer!.on('connection', (conn) => {
           conn.on('open', () => {
             this.connections.set(conn.peer, conn);
@@ -57,7 +82,11 @@ export class HostPeerManager {
       });
 
       this.peer.on('error', (err) => {
-        reject(err);
+        if (!settled) {
+          settled = true;
+          clearTimeout(timeout);
+          reject(err);
+        }
       });
     });
   }

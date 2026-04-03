@@ -33,7 +33,7 @@ export function renderLanding(): HTMLElement {
       const name = (document.getElementById('host-name') as HTMLInputElement).value.trim();
       if (!name) return showError('Введи имя');
 
-      btnCreate.textContent = 'СОЗДАЁМ...';
+      btnCreate.textContent = 'ПОДКЛЮЧЕНИЕ...';
       (btnCreate as HTMLButtonElement).disabled = true;
 
       const engine = getEngine();
@@ -45,9 +45,15 @@ export function renderLanding(): HTMLElement {
         }
       });
 
-      await engine.createRoom(name);
-      if (engine.state === 'lobby') {
-        navigate('#/lobby');
+      try {
+        await engine.createRoom(name);
+        if (engine.state === 'lobby') {
+          navigate('#/lobby');
+        }
+      } catch {
+        showError('Не удалось подключиться к серверу. Попробуй ещё раз.');
+        btnCreate.textContent = 'СОЗДАТЬ';
+        (btnCreate as HTMLButtonElement).disabled = false;
       }
     });
 
@@ -58,7 +64,7 @@ export function renderLanding(): HTMLElement {
       if (!name) return showError('Введи имя');
       if (!code || code.length < 4) return showError('Введи код комнаты');
 
-      btnJoin.textContent = 'ПОДКЛЮЧАЕМСЯ...';
+      btnJoin.textContent = 'ПОДКЛЮЧЕНИЕ...';
       (btnJoin as HTMLButtonElement).disabled = true;
 
       const engine = getEngine();
@@ -70,9 +76,15 @@ export function renderLanding(): HTMLElement {
         }
       });
 
-      await engine.joinRoom(code, name);
-      if (engine.state === 'lobby') {
-        navigate('#/lobby');
+      try {
+        await engine.joinRoom(code, name);
+        if (engine.state === 'lobby') {
+          navigate('#/lobby');
+        }
+      } catch {
+        showError('Не удалось подключиться. Проверь код комнаты.');
+        btnJoin.textContent = 'ВОЙТИ';
+        (btnJoin as HTMLButtonElement).disabled = false;
       }
     });
 
