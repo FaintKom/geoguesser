@@ -66,6 +66,7 @@ export class GameEngine {
       roomCode: roomCode || '',
       playerName: this.localPlayerName,
       isHost: this.isHost,
+      savedAt: Date.now(),
     };
     localStorage.setItem('geoguesser_session', JSON.stringify(session));
   }
@@ -78,11 +79,21 @@ export class GameEngine {
     this.clearSession();
   }
 
+  static clearSavedSession() {
+    localStorage.removeItem('geoguesser_session');
+  }
+
   static getSavedSession(): { roomCode: string; playerName: string; isHost: boolean } | null {
     try {
       const data = localStorage.getItem('geoguesser_session');
       if (!data) return null;
-      return JSON.parse(data);
+      const session = JSON.parse(data);
+      // Expire sessions older than 2 hours
+      if (session.savedAt && Date.now() - session.savedAt > 2 * 60 * 60 * 1000) {
+        localStorage.removeItem('geoguesser_session');
+        return null;
+      }
+      return session;
     } catch {
       return null;
     }

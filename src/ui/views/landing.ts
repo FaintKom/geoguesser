@@ -13,30 +13,27 @@ export function renderLanding(): HTMLElement {
   div.style.flex = '1';
   wrapper.appendChild(div);
 
-  // Try to reconnect from saved session
+  // Try to reconnect from saved session (client only, non-host)
   const saved = GameEngine.getSavedSession();
-  if (saved && saved.roomCode) {
+  if (saved && saved.roomCode && !saved.isHost) {
     const engine = getEngine();
-    console.log('[GeoGuesser] Reconnecting to room:', saved.roomCode, 'as', saved.isHost ? 'host' : 'client');
+    console.log('[GeoGuesser] Reconnecting to room:', saved.roomCode);
 
     const reconnect = async () => {
       try {
-        if (saved.isHost) {
-          // Host can't fully reconnect (room data is lost), navigate to landing
-          engine.clearSessionPublic();
-        } else {
-          await engine.joinRoom(saved.roomCode, saved.playerName);
-          if (engine.state === 'lobby') {
-            navigate('#/lobby');
-            return;
-          }
+        await engine.joinRoom(saved.roomCode, saved.playerName);
+        if (engine.state === 'lobby') {
+          navigate('#/lobby');
         }
       } catch {
-        console.log('[GeoGuesser] Reconnect failed, showing landing');
+        console.log('[GeoGuesser] Reconnect failed — room likely ended');
         engine.clearSessionPublic();
       }
     };
     reconnect();
+  } else if (saved) {
+    // Host or stale session — clear it
+    GameEngine.clearSavedSession();
   }
 
   div.innerHTML = `
