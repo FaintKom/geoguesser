@@ -218,6 +218,12 @@ export class CodenamesEngine {
     }
   }
 
+  kickPlayer(playerId: string) {
+    if (!this.isHost || playerId === this.localPlayerId) return;
+    this.players = this.players.filter(p => p.id !== playerId);
+    this.broadcastRoomState();
+  }
+
   updateSettings(settings: { lang?: string; turnTimer?: number; boardSize?: number }) {
     if (settings.lang) this.lang = settings.lang;
     if (settings.turnTimer !== undefined) this.turnTimer = settings.turnTimer;

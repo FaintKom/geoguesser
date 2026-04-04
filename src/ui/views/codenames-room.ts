@@ -121,6 +121,30 @@ export function renderCodenamesRoom(): HTMLElement {
     }
   }
 
+  function createPlayerRow(player: { id: string; name: string }, isCaptain: boolean): HTMLElement {
+    const row = document.createElement('div');
+    row.className = `cn-player${isCaptain ? ' cn-player--captain' : ''}`;
+
+    const name = document.createElement('span');
+    name.textContent = isCaptain ? `👑 ${player.name}` : player.name;
+    row.appendChild(name);
+
+    // Host can kick non-self players
+    if (engine.isHost && player.id !== engine.localPlayerId) {
+      const kickBtn = document.createElement('button');
+      kickBtn.className = 'cn-kick-btn';
+      kickBtn.textContent = '✕';
+      kickBtn.title = 'Кикнуть';
+      kickBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        engine.kickPlayer(player.id);
+      });
+      row.appendChild(kickBtn);
+    }
+
+    return row;
+  }
+
   function updateAll() {
     updateTeamPanels();
     if (engine.gameState) {
@@ -147,17 +171,11 @@ export function renderCodenamesRoom(): HTMLElement {
       playersEl.innerHTML = '';
 
       if (captain) {
-        const cap = document.createElement('div');
-        cap.className = 'cn-player cn-player--captain';
-        cap.textContent = `👑 ${captain.name}`;
-        playersEl.appendChild(cap);
+        playersEl.appendChild(createPlayerRow(captain, true));
       }
 
       for (const g of guessers) {
-        const el = document.createElement('div');
-        el.className = 'cn-player';
-        el.textContent = g.name;
-        playersEl.appendChild(el);
+        playersEl.appendChild(createPlayerRow(g, false));
       }
 
       // Actions

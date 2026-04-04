@@ -793,9 +793,34 @@ body {
   color: var(--text-secondary);
 }
 
+.cn-player {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .cn-player--captain {
   color: var(--neon-orange);
   font-weight: 600;
+}
+
+.cn-kick-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.8rem;
+  padding: 0 4px;
+  opacity: 0;
+  transition: opacity 0.2s, color 0.2s;
+}
+
+.cn-player:hover .cn-kick-btn {
+  opacity: 1;
+}
+
+.cn-kick-btn:hover {
+  color: #ff4466;
 }
 
 .cn-team__btn {
