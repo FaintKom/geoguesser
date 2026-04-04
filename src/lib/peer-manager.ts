@@ -57,18 +57,17 @@ export class HostPeerManager {
         state: 'lobby',
       });
 
-      const createdAt = Date.now();
       console.log('[GeoGuesser] Room created:', this.roomCode);
 
-      // Listen for peer messages (only new ones)
+      // Listen for peer messages — room is fresh, no existing messages to skip
       const messagesRef = ref(db, `rooms/${this.roomCode}/messages`);
       onChildAdded(messagesRef, (snap) => {
         const data = snap.val();
-        if (data && data.from !== this.playerId && data.ts >= createdAt) {
+        if (data && data.from !== this.playerId) {
           console.log('[GeoGuesser] Host got message:', data.type, 'from:', data.from);
           this.onMessageHandler?.(data as PeerMessage, data.from);
         }
-        // Always clean up processed messages
+        // Clean up processed messages
         remove(snap.ref);
       });
       this.cleanupFns.push(() => off(messagesRef));
@@ -176,14 +175,28 @@ export class ClientPeerManager {
     });
 
     this.connection = true;
-    const joinedAt = Date.now();
+    const skippedKeys = new Set<string>();
     console.log('[GeoGuesser] Joined room:', this.roomCode);
 
-    // Listen for broadcast messages from host (only new ones after join)
+    // Listen for broadcast messages from host
+    // Skip all existing messages on first load, only process new ones
     const broadcastRef = ref(db, `rooms/${this.roomCode}/broadcast`);
+
+    // First, snapshot existing keys to skip them
+    const existingSnap = await get(broadcastRef);
+    if (existingSnap.exists()) {
+      existingSnap.forEach((child) => {
+        skippedKeys.add(child.key!);
+      });
+    }
+    console.log('[GeoGuesser] Skipping', skippedKeys.size, 'existing broadcast messages');
+
     onChildAdded(broadcastRef, (snap) => {
+      const key = snap.key!;
+      if (skippedKeys.has(key)) return; // skip pre-existing messages
+
       const data = snap.val();
-      if (data && data.ts >= joinedAt) {
+      if (data) {
         console.log('[GeoGuesser] Client got broadcast:', data.type);
         this.onMessageHandler?.(data as HostMessage);
       }
