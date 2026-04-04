@@ -4,6 +4,9 @@ export function renderGameSelect(): HTMLElement {
   const div = document.createElement('div');
   div.className = 'landing';
 
+  // Always clear stale sessions when landing on game select
+  localStorage.removeItem('geoguesser_session');
+
   div.innerHTML = `
     <h1 class="title title--glow landing__logo">GAME HUB</h1>
     <p class="landing__subtitle">Выбери игру</p>

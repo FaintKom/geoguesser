@@ -1,7 +1,6 @@
 import { getEngine } from '../../main';
 import { navigate } from '../router';
 import { createNavbar } from '../components/navbar';
-import { GameEngine } from '../../lib/game-engine';
 
 export function renderLanding(): HTMLElement {
   const wrapper = document.createElement('div');
@@ -12,29 +11,6 @@ export function renderLanding(): HTMLElement {
   div.className = 'landing';
   div.style.flex = '1';
   wrapper.appendChild(div);
-
-  // Try to reconnect from saved session (client only, non-host)
-  const saved = GameEngine.getSavedSession();
-  if (saved && saved.roomCode && !saved.isHost) {
-    const engine = getEngine();
-    console.log('[GeoGuesser] Reconnecting to room:', saved.roomCode);
-
-    const reconnect = async () => {
-      try {
-        await engine.joinRoom(saved.roomCode, saved.playerName);
-        if (engine.state === 'lobby') {
-          navigate('#/lobby');
-        }
-      } catch {
-        console.log('[GeoGuesser] Reconnect failed — room likely ended');
-        engine.clearSessionPublic();
-      }
-    };
-    reconnect();
-  } else if (saved) {
-    // Host or stale session — clear it
-    GameEngine.clearSavedSession();
-  }
 
   div.innerHTML = `
     <h1 class="title title--glow landing__logo">GEOGUESSER</h1>
