@@ -1,6 +1,5 @@
 import { getEngine } from '../../main';
-import { navigate } from '../router';
-import { setCleanup } from '../router';
+import { navigate, setCleanup, setRoomInUrl } from '../router';
 import { MapillaryViewer } from '../components/mapillary-viewer';
 import { GuessMap } from '../components/guess-map';
 import { createTimerElement, updateTimer, unlockAudio } from '../components/timer';
@@ -47,6 +46,10 @@ export function renderGame(): HTMLElement {
     document.getElementById('timer-container')?.appendChild(timerEl);
     viewer.init();
     guessMap.init('guess-map-container');
+
+    // Keep room code in URL during game
+    const rc = engine.hostPeer?.roomCode || engine.clientPeer?.roomCode || '';
+    if (rc) setRoomInUrl(rc, 'geo');
 
     updatePlayersStatus();
 

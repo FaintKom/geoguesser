@@ -1,6 +1,5 @@
 import { getEngine } from '../../main';
-import { navigate } from '../router';
-import { setCleanup } from '../router';
+import { navigate, setCleanup, setRoomInUrl } from '../router';
 import { GuessMap } from '../components/guess-map';
 import { PLAYER_COLORS } from '../../config';
 import type { Guess } from '../../types';
@@ -57,6 +56,8 @@ export function renderResults(): HTMLElement {
   });
 
   requestAnimationFrame(() => {
+    const rc = engine.hostPeer?.roomCode || engine.clientPeer?.roomCode || '';
+    if (rc) setRoomInUrl(rc, 'geo');
     guessMap.init('results-map');
 
     if (data) {

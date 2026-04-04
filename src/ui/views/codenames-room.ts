@@ -1,4 +1,5 @@
 import { getCodenamesEngine } from '../../main';
+import { setRoomInUrl } from '../router';
 import type { CNGameState, CNUIEvent } from '../../lib/codenames-engine';
 
 function escapeHtml(text: string): string {
@@ -72,6 +73,9 @@ export function renderCodenamesRoom(): HTMLElement {
   `;
 
   requestAnimationFrame(() => {
+    // Set room code in URL for easy rejoin
+    if (roomCode) setRoomInUrl(roomCode, 'codenames');
+
     // Copy room code
     document.getElementById('cn-room-code')!.addEventListener('click', () => {
       const url = `${window.location.origin}${window.location.pathname}?cnroom=${roomCode}`;

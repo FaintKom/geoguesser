@@ -1,5 +1,5 @@
 import { getEngine } from '../../main';
-import { navigate } from '../router';
+import { navigate, setRoomInUrl } from '../router';
 import { createNavbar } from '../components/navbar';
 import { renderPlayerList } from '../components/player-list';
 import { unlockAudio } from '../components/timer';
@@ -68,6 +68,9 @@ export function renderLobby(): HTMLElement {
   `;
 
   requestAnimationFrame(() => {
+    // Set room code in URL for easy rejoin
+    if (roomCode) setRoomInUrl(roomCode, 'geo');
+
     updatePlayerList();
 
     // Copy invite link
